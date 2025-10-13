@@ -4014,22 +4014,11 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
           children: [
             // Título
             const Text(
-              'Guías de Pesca Profesionales',
+              'Servicios de Guías de Pesca',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2E7D32),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: 8),
-            
-            const Text(
-              'Administra y muestra los servicios de tus guías de pesca',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
               ),
               textAlign: TextAlign.center,
             ),
@@ -4160,9 +4149,12 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
             IconButton(
               icon: const Icon(Icons.visibility, color: Color(0xFF2196F3)),
               onPressed: () {
-                // Ver detalles del guía
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Ver detalles de ${guia.nombre}')),
+                // Ver pantalla individual del guía
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PantallaDetalleGuia(guia: guia),
+                  ),
                 );
               },
             ),
@@ -4193,7 +4185,7 @@ class GuiaPesca {
   final String? facebook;
   final String? instagram;
   final String? whatsapp;
-  final List<String>? fotos;
+  final List<String> fotos; // Lista de rutas de fotos
   final String? descripcion;
 
   GuiaPesca({
@@ -4204,9 +4196,9 @@ class GuiaPesca {
     this.facebook,
     this.instagram,
     this.whatsapp,
-    this.fotos,
+    List<String>? fotos,
     this.descripcion,
-  });
+  }) : fotos = fotos ?? [];
 }
 
 // Pantalla para agregar un nuevo guía
@@ -4424,6 +4416,408 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Pantalla de detalles individual del guía
+class PantallaDetalleGuia extends StatefulWidget {
+  final GuiaPesca guia;
+
+  const PantallaDetalleGuia({
+    super.key,
+    required this.guia,
+  });
+
+  @override
+  State<PantallaDetalleGuia> createState() => _PantallaDetalleGuiaState();
+}
+
+class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
+  late List<String> fotos;
+
+  @override
+  void initState() {
+    super.initState();
+    fotos = List.from(widget.guia.fotos);
+  }
+
+  void _agregarFoto() {
+    // Aquí se implementaría la selección de foto desde galería
+    // Por ahora simulamos agregando una URL de placeholder
+    setState(() {
+      fotos.add('https://via.placeholder.com/300x200?text=Nueva+Captura');
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('📸 Foto agregada (funcionalidad de selección próximamente)'),
+        backgroundColor: Color(0xFF4CAF50),
+      ),
+    );
+  }
+
+  void _eliminarFoto(int index) {
+    setState(() {
+      fotos.removeAt(index);
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🗑️ Foto eliminada'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE3F2FD),
+      appBar: AppBar(
+        title: Text(
+          widget.guia.nombre,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: const Color(0xFF2E7D32),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header con logo y datos del guía
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF2E7D32),
+                    Color(0xFF4CAF50),
+                    Color(0xFF66BB6A),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Logo
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.white,
+                    child: widget.guia.logoUrl != null && widget.guia.logoUrl!.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              widget.guia.logoUrl!,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.person, size: 60, color: Color(0xFF4CAF50));
+                              },
+                            ),
+                          )
+                        : const Icon(Icons.person, size: 60, color: Color(0xFF4CAF50)),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Nombre
+                  Text(
+                    widget.guia.nombre,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Teléfono
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.phone, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.guia.telefono,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  if (widget.guia.email != null && widget.guia.email!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.email, color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.guia.email!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            
+            // Redes sociales
+            if (widget.guia.facebook != null || widget.guia.instagram != null || widget.guia.whatsapp != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (widget.guia.facebook != null && widget.guia.facebook!.isNotEmpty)
+                      _buildSocialButton(Icons.facebook, 'Facebook', widget.guia.facebook!),
+                    if (widget.guia.instagram != null && widget.guia.instagram!.isNotEmpty)
+                      _buildSocialButton(Icons.camera_alt, 'Instagram', widget.guia.instagram!),
+                    if (widget.guia.whatsapp != null && widget.guia.whatsapp!.isNotEmpty)
+                      _buildSocialButton(Icons.chat, 'WhatsApp', widget.guia.whatsapp!),
+                  ],
+                ),
+              ),
+            
+            // Descripción
+            if (widget.guia.descripcion != null && widget.guia.descripcion!.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sobre el Guía',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.guia.descripcion!,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            // Galería de fotos
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '📸 Galería de Capturas',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _agregarFoto,
+                        icon: const Icon(Icons.add_a_photo, size: 18),
+                        label: const Text('Agregar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CAF50),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  if (fotos.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.photo_library,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No hay fotos aún',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Toca "Agregar" para subir fotos de capturas',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.2,
+                      ),
+                      itemCount: fotos.length,
+                      itemBuilder: (context, index) {
+                        return _buildFotoCard(fotos[index], index);
+                      },
+                    ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF2E7D32),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFotoCard(String fotoUrl, int index) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              fotoUrl,
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: IconButton(
+            icon: const Icon(Icons.delete, color: Colors.white),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.red,
+              padding: const EdgeInsets.all(8),
+            ),
+            onPressed: () => _eliminarFoto(index),
+          ),
+        ),
+      ],
     );
   }
 }
