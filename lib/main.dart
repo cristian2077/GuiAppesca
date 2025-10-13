@@ -4,6 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'widgets/calendar_widget.dart';
 
 void main() async {
@@ -819,8 +823,12 @@ class PantallaClima extends StatefulWidget {
 }
 
 class _PantallaClimaState extends State<PantallaClima> {
+  bool _cargando = true;
+  String _ubicacion = 'Obteniendo ubicación...';
+  String _error = '';
+  
   // Datos de ejemplo para 10 días
-  final List<Map<String, dynamic>> pronostico10Dias = [
+  List<Map<String, dynamic>> pronostico10Dias = [
     {
       'dia': 'Hoy',
       'fecha': '15 Ene',
@@ -934,6 +942,135 @@ class _PantallaClimaState extends State<PantallaClima> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _obtenerUbicacionYClima();
+  }
+
+  Future<void> _obtenerUbicacionYClima() async {
+    try {
+      setState(() {
+        _cargando = true;
+        _error = '';
+      });
+
+      // Solicitar permisos de ubicación
+      var permiso = await Permission.location.request();
+      
+      if (!permiso.isGranted) {
+        setState(() {
+          _error = 'Se necesita permiso de ubicación para obtener el clima';
+          _cargando = false;
+        });
+        return;
+      }
+
+      // Obtener posición actual
+      Position posicion = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Obtener nombre de la ubicación
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        posicion.latitude,
+        posicion.longitude,
+      );
+      
+      String ciudad = placemarks.first.locality ?? 'Ubicación actual';
+      String pais = placemarks.first.country ?? '';
+
+      setState(() {
+        _ubicacion = '$ciudad, $pais';
+      });
+
+      // Obtener datos del clima desde Open-Meteo (API gratuita)
+      final url = Uri.parse(
+        'https://api.open-meteo.com/v1/forecast?'
+        'latitude=${posicion.latitude}'
+        '&longitude=${posicion.longitude}'
+        '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode'
+        '&timezone=auto'
+        '&forecast_days=10'
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final datos = json.decode(response.body);
+        final daily = datos['daily'];
+        
+        // Actualizar pronóstico con datos reales
+        List<Map<String, dynamic>> nuevoPronostico = [];
+        
+        for (int i = 0; i < 10; i++) {
+          DateTime fecha = DateTime.parse(daily['time'][i]);
+          String dia = i == 0 ? 'Hoy' : i == 1 ? 'Mañana' : _obtenerNombreDia(fecha.weekday);
+          String fechaStr = DateFormat('d MMM', 'es').format(fecha);
+          
+          int tempMax = daily['temperature_2m_max'][i].round();
+          int tempMin = daily['temperature_2m_min'][i].round();
+          int weatherCode = daily['weathercode'][i];
+          int precipitacion = daily['precipitation_probability_max'][i];
+          int viento = daily['windspeed_10m_max'][i].round();
+          
+          // Interpretar código del clima
+          Map<String, dynamic> climaInfo = _interpretarCodigoClima(weatherCode);
+          
+          nuevoPronostico.add({
+            'dia': dia,
+            'fecha': fechaStr,
+            'tempMax': tempMax,
+            'tempMin': tempMin,
+            'estado': climaInfo['estado'],
+            'icono': climaInfo['icono'],
+            'humedad': 60 + (precipitacion ~/ 3), // Estimación
+            'viento': viento,
+            'precipitacion': precipitacion,
+          });
+        }
+        
+        setState(() {
+          pronostico10Dias = nuevoPronostico;
+          _cargando = false;
+        });
+      } else {
+        throw Exception('Error al obtener datos del clima');
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Error al obtener el clima: ${e.toString()}';
+        _cargando = false;
+      });
+    }
+  }
+
+  String _obtenerNombreDia(int weekday) {
+    const dias = ['Lun', 'Mar', 'Miér', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    return dias[weekday - 1];
+  }
+
+  Map<String, dynamic> _interpretarCodigoClima(int code) {
+    // Códigos WMO Weather interpretation codes
+    if (code == 0) {
+      return {'estado': 'Despejado', 'icono': Icons.wb_sunny};
+    } else if (code <= 3) {
+      return {'estado': 'Parcialmente nublado', 'icono': Icons.wb_cloudy};
+    } else if (code <= 48) {
+      return {'estado': 'Nublado', 'icono': Icons.cloud};
+    } else if (code <= 67) {
+      return {'estado': 'Lluvioso', 'icono': Icons.water_drop};
+    } else if (code <= 77) {
+      return {'estado': 'Nieve', 'icono': Icons.ac_unit};
+    } else if (code <= 82) {
+      return {'estado': 'Lluvia intensa', 'icono': Icons.water_drop};
+    } else if (code <= 86) {
+      return {'estado': 'Nieve intensa', 'icono': Icons.ac_unit};
+    } else {
+      return {'estado': 'Tormenta', 'icono': Icons.flash_on};
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -994,20 +1131,29 @@ class _PantallaClimaState extends State<PantallaClima> {
                           color: Colors.white.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                        child: _cargando 
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.location_on,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Paraná, Entre Ríos',
-                              style: TextStyle(
+                            Text(
+                              _ubicacion,
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -1020,12 +1166,14 @@ class _PantallaClimaState extends State<PantallaClima> {
                                 ],
                               ),
                             ),
-                            const Text(
-                              'Argentina',
+                            Text(
+                              _error.isEmpty 
+                                ? (_cargando ? 'Cargando clima...' : 'Actualizado ahora')
+                                : _error,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.white70,
-                                shadows: [
+                                color: _error.isEmpty ? Colors.white70 : Colors.redAccent,
+                                shadows: const [
                                   Shadow(
                                     offset: Offset(0, 1),
                                     blurRadius: 1,
