@@ -2082,8 +2082,9 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                 ),
               ),
               
-              // Estado de pago y botón compartir
-              Row(
+              // Estado de pago y botones de acción
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -2100,21 +2101,60 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _shareBooking(booking),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50),
-                        borderRadius: BorderRadius.circular(6),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      // Botón Editar
+                      GestureDetector(
+                        onTap: () => _editBooking(booking, index),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2196F3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.share,
-                        color: Colors.white,
-                        size: 14,
+                      const SizedBox(width: 4),
+                      // Botón Eliminar
+                      GestureDetector(
+                        onTap: () => _confirmDeleteBooking(booking, index),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF44336),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 4),
+                      // Botón Compartir
+                      GestureDetector(
+                        onTap: () => _shareBooking(booking),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.share,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -2312,6 +2352,485 @@ Comprobante de acuerdos con el guía de pesca
         );
       },
     );
+  }
+
+  // Método para editar una contratación
+  void _editBooking(Booking booking, int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PantallaEditarContratacion(
+          booking: booking,
+          onUpdateBooking: (updatedBooking) async {
+            final bookings = await BookingStorage.loadBookings();
+            bookings[index] = updatedBooking;
+            await BookingStorage.saveBookings(bookings);
+            setState(() {});
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Contratación actualizada exitosamente'),
+                backgroundColor: Color(0xFF4CAF50),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+          existingBookings: [],
+        ),
+      ),
+    );
+  }
+
+  // Método para confirmar eliminación
+  void _confirmDeleteBooking(Booking booking, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFF44336),
+                size: 28,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Confirmar Eliminación',
+                style: TextStyle(
+                  color: Color(0xFFF44336),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '¿Estás seguro de que deseas eliminar esta contratación?',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '👤 ${booking.clientName}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '📅 ${DateFormat('dd/MM/yyyy').format(booking.date)}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '⚠️ Esta acción no se puede deshacer.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFFF44336),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: Color(0xFF666666),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Cerrar diálogo
+                
+                // Eliminar la contratación
+                await BookingStorage.removeBooking(index);
+                setState(() {});
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🗑️ Contratación eliminada'),
+                    backgroundColor: Color(0xFFF44336),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF44336),
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              child: const Text(
+                'Eliminar',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Clase para editar contrataciones existentes
+class PantallaEditarContratacion extends StatefulWidget {
+  final Booking booking;
+  final Function(Booking) onUpdateBooking;
+  final List<Booking> existingBookings;
+
+  const PantallaEditarContratacion({
+    super.key,
+    required this.booking,
+    required this.onUpdateBooking,
+    this.existingBookings = const [],
+  });
+
+  @override
+  State<PantallaEditarContratacion> createState() => _PantallaEditarContratacionState();
+}
+
+class _PantallaEditarContratacionState extends State<PantallaEditarContratacion> {
+  // Estados para el formulario (inicializados con los datos del booking)
+  late DateTime selectedDate;
+  bool hasSelectedDate = true;
+  late String clientName;
+  late String clientPhone;
+  late String clientLocation;
+  late String numberOfFishermen;
+  String targetSpecies = '';
+  late Set<String> selectedSpecies;
+  late FishingMode selectedFishingMode;
+  Set<FishingMode> selectedFishingModes = {};
+  late List<String> additionalBoats;
+  late bool includesBait;
+  late bool equipmentRental;
+  late bool includesAccommodation;
+  late String fishingDays;
+  late String totalPrice;
+  late String depositAmount;
+  late String notes;
+  late PaymentStatus paymentStatus;
+  ServiceDetails serviceDetails = ServiceDetails();
+  
+  bool showSpeciesDropdown = false;
+  bool showFishingModeDropdown = false;
+  bool expandedServices = false;
+  bool expandedEquipment = false;
+  bool expandedAccommodation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar con los datos del booking existente
+    selectedDate = widget.booking.date;
+    clientName = widget.booking.clientName;
+    clientPhone = widget.booking.clientPhone;
+    clientLocation = widget.booking.clientLocation;
+    numberOfFishermen = widget.booking.numberOfFishermen.toString();
+    selectedSpecies = widget.booking.targetSpecies.toSet();
+    selectedFishingMode = widget.booking.fishingMode;
+    additionalBoats = List<String>.from(widget.booking.additionalBoats);
+    includesBait = widget.booking.includesBait;
+    equipmentRental = widget.booking.equipmentRental;
+    includesAccommodation = widget.booking.includesAccommodation;
+    fishingDays = widget.booking.fishingDays.toString();
+    totalPrice = widget.booking.totalPrice.toString();
+    depositAmount = widget.booking.depositAmount.toString();
+    notes = widget.booking.notes ?? '';
+    paymentStatus = widget.booking.paymentStatus;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Editar Contratación',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFBBDEFB),
+              Color(0xFF64B5F6),
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              color: Colors.white.withOpacity(0.95),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '✏️ Editar Contratación',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2196F3),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    _buildTextField(
+                      label: '👤 Nombre del cliente',
+                      value: clientName,
+                      onChanged: (value) => setState(() => clientName = value),
+                      icon: Icons.person,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '📞 Teléfono',
+                      value: clientPhone,
+                      onChanged: (value) => setState(() => clientPhone = value),
+                      icon: Icons.phone,
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '📍 Localidad del cliente',
+                      value: clientLocation,
+                      onChanged: (value) => setState(() => clientLocation = value),
+                      icon: Icons.location_on,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '🎣 Días de pesca',
+                      value: fishingDays,
+                      onChanged: (value) => setState(() => fishingDays = value),
+                      icon: Icons.settings,
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '👥 Número de pescadores',
+                      value: numberOfFishermen,
+                      onChanged: (value) => setState(() => numberOfFishermen = value),
+                      icon: Icons.person,
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '💰 Precio total',
+                      value: totalPrice,
+                      onChanged: (value) => setState(() => totalPrice = value),
+                      icon: Icons.attach_money,
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '💳 Seña/Anticipo',
+                      value: depositAmount,
+                      onChanged: (value) => setState(() => depositAmount = value),
+                      icon: Icons.payment,
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Estado de pago
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '💳 Estado del pago',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2196F3),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...PaymentStatus.values.map((status) {
+                            return RadioListTile<PaymentStatus>(
+                              title: Text(status.displayName),
+                              value: status,
+                              groupValue: paymentStatus,
+                              onChanged: (value) {
+                                setState(() => paymentStatus = value!);
+                              },
+                              activeColor: const Color(0xFF2196F3),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildTextField(
+                      label: '📝 Notas adicionales (opcional)',
+                      value: notes,
+                      onChanged: (value) => setState(() => notes = value),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Botones
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _saveChanges,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2196F3),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Guardar Cambios',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required String value,
+    required Function(String) onChanged,
+    IconData? icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: TextEditingController(text: value)..selection = TextSelection.fromPosition(TextPosition(offset: value.length)),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: icon != null ? Icon(icon) : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
+        ),
+      ),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      onChanged: onChanged,
+    );
+  }
+
+  void _saveChanges() {
+    if (clientName.isEmpty || clientPhone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor completa los campos obligatorios'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final updatedBooking = Booking(
+      date: selectedDate,
+      clientName: clientName,
+      clientPhone: clientPhone,
+      clientLocation: clientLocation,
+      numberOfFishermen: int.tryParse(numberOfFishermen) ?? 1,
+      targetSpecies: selectedSpecies.toList(),
+      fishingMode: selectedFishingMode,
+      additionalBoats: additionalBoats,
+      includesBait: includesBait,
+      equipmentRental: equipmentRental,
+      includesAccommodation: includesAccommodation,
+      includesMeals: false,
+      fishingDays: int.tryParse(fishingDays) ?? 1,
+      accommodationNights: 0,
+      totalPrice: double.tryParse(totalPrice) ?? 0.0,
+      depositAmount: double.tryParse(depositAmount) ?? 0.0,
+      paymentStatus: paymentStatus,
+      notes: notes.isEmpty ? null : notes,
+      serviceDetails: serviceDetails,
+    );
+
+    widget.onUpdateBooking(updatedBooking);
+    Navigator.pop(context);
   }
 }
 
