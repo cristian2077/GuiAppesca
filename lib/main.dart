@@ -949,7 +949,7 @@ class _PantallaClimaState extends State<PantallaClima> {
 
   Future<void> _obtenerUbicacionYClima() async {
     try {
-      setState(() {
+    setState(() {
         _cargando = true;
         _error = '';
       });
@@ -3978,6 +3978,20 @@ class PantallaServiciosGuia extends StatefulWidget {
 }
 
 class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
+  List<GuiaPesca> guias = []; // Lista de guías cargados
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarGuias();
+  }
+
+  Future<void> _cargarGuias() async {
+    // Aquí se cargarían los guías desde SharedPreferences
+    // Por ahora dejamos la lista vacía
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -3993,208 +4007,109 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
         backgroundColor: const Color(0xFF2E7D32),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header con información principal
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF2E7D32),
-                    Color(0xFF4CAF50),
-                    Color(0xFF66BB6A),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.directions_boat,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Guías Profesionales de Pesca',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Servicios especializados en pesca deportiva con guías experimentados en las mejores aguas de la región.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Servicios disponibles
+            // Título
             const Text(
-              'Servicios Disponibles',
+              'Guías de Pesca Profesionales',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2E7D32),
               ),
+              textAlign: TextAlign.center,
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             
-            // Lista de servicios
-            _buildServicioCard(
-              icon: Icons.set_meal,
-              title: 'Pesca de Dorado',
-              description: 'Experiencia de pesca de dorado en aguas profundas con guías especializados.',
-              price: 'Desde \$15,000',
-            ),
-            
-            _buildServicioCard(
-              icon: Icons.waves,
-              title: 'Pesca de Surubí',
-              description: 'Técnicas especializadas para la captura de surubí en ríos y arroyos.',
-              price: 'Desde \$12,000',
-            ),
-            
-            _buildServicioCard(
-              icon: Icons.directions_boat,
-              title: 'Pesca en Embarcación',
-              description: 'Salidas en embarcaciones equipadas con todo el equipo necesario.',
-              price: 'Desde \$8,000',
-            ),
-            
-            _buildServicioCard(
-              icon: Icons.beach_access,
-              title: 'Pesca Costera',
-              description: 'Pesca desde la costa con técnicas tradicionales y modernas.',
-              price: 'Desde \$5,000',
-            ),
-            
-            _buildServicioCard(
-              icon: Icons.nightlight_round,
-              title: 'Pesca Nocturna',
-              description: 'Experiencia única de pesca nocturna con equipos especializados.',
-              price: 'Desde \$10,000',
-            ),
-            
-            _buildServicioCard(
-              icon: Icons.school,
-              title: 'Clases de Pesca',
-              description: 'Aprende técnicas de pesca con instructores certificados.',
-              price: 'Desde \$3,000',
+            const Text(
+              'Administra y muestra los servicios de tus guías de pesca',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
             ),
             
             const SizedBox(height: 24),
             
-            // Información de contacto
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Color(0xFF4CAF50)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.contact_phone,
-                        color: Color(0xFF2E7D32),
-                        size: 24,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Información de Contacto',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E7D32),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '📞 Teléfono: +54 9 343 123-4567',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '📧 Email: guias@pesca.com',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '📍 Ubicación: Paraná, Entre Ríos',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Aquí se podría agregar funcionalidad de contacto
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Funcionalidad de contacto próximamente'),
-                            backgroundColor: Color(0xFF4CAF50),
-                          ),
-                        );
+            // Botón para agregar nuevo guía
+            ElevatedButton.icon(
+              onPressed: () {
+                // Navegar a pantalla para agregar guía
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PantallaAgregarGuia(
+                      onGuardado: (guia) {
+                        setState(() {
+                          guias.add(guia);
+                        });
                       },
-                      icon: const Icon(Icons.call),
-                      label: const Text('Contactar Guía'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4CAF50),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
                     ),
                   ),
-                ],
+                );
+              },
+              icon: const Icon(Icons.add, size: 24),
+              label: const Text(
+                'Agregar Nuevo Guía',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4CAF50),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Lista de guías
+            Expanded(
+              child: guias.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.directions_boat,
+                            size: 80,
+                            color: Colors.grey[300],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No hay guías agregados',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Toca el botón "Agregar Nuevo Guía" para comenzar',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: guias.length,
+                      itemBuilder: (context, index) {
+                        return _buildGuiaCard(guias[index], index);
+                      },
+                    ),
             ),
           ],
         ),
@@ -4202,75 +4117,312 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
     );
   }
 
-  Widget _buildServicioCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required String price,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+  Widget _buildGuiaCard(GuiaPesca guia, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF2E7D32),
-              size: 28,
-            ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
+        leading: CircleAvatar(
+          radius: 30,
+          backgroundColor: const Color(0xFF4CAF50),
+          child: guia.logoUrl != null && guia.logoUrl!.isNotEmpty
+              ? ClipOval(
+                  child: Image.network(
+                    guia.logoUrl!,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.person, size: 30, color: Colors.white);
+                    },
+                  ),
+                )
+              : const Icon(Icons.person, size: 30, color: Colors.white),
+        ),
+        title: Text(
+          guia.nombre,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2E7D32),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4CAF50),
-                  ),
-                ),
-              ],
+        ),
+        subtitle: Text(
+          guia.telefono,
+          style: const TextStyle(fontSize: 14),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.visibility, color: Color(0xFF2196F3)),
+              onPressed: () {
+                // Ver detalles del guía
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Ver detalles de ${guia.nombre}')),
+                );
+              },
             ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                setState(() {
+                  guias.removeAt(index);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Guía eliminado')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Modelo de datos para GuiaPesca
+class GuiaPesca {
+  final String nombre;
+  final String telefono;
+  final String? email;
+  final String? logoUrl;
+  final String? facebook;
+  final String? instagram;
+  final String? whatsapp;
+  final List<String>? fotos;
+  final String? descripcion;
+
+  GuiaPesca({
+    required this.nombre,
+    required this.telefono,
+    this.email,
+    this.logoUrl,
+    this.facebook,
+    this.instagram,
+    this.whatsapp,
+    this.fotos,
+    this.descripcion,
+  });
+}
+
+// Pantalla para agregar un nuevo guía
+class PantallaAgregarGuia extends StatefulWidget {
+  final Function(GuiaPesca) onGuardado;
+
+  const PantallaAgregarGuia({
+    super.key,
+    required this.onGuardado,
+  });
+
+  @override
+  State<PantallaAgregarGuia> createState() => _PantallaAgregarGuiaState();
+}
+
+class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
+  final _formKey = GlobalKey<FormState>();
+  final _nombreController = TextEditingController();
+  final _telefonoController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _logoUrlController = TextEditingController();
+  final _facebookController = TextEditingController();
+  final _instagramController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _descripcionController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _telefonoController.dispose();
+    _emailController.dispose();
+    _logoUrlController.dispose();
+    _facebookController.dispose();
+    _instagramController.dispose();
+    _whatsappController.dispose();
+    _descripcionController.dispose();
+    super.dispose();
+  }
+
+  void _guardarGuia() {
+    if (_formKey.currentState!.validate()) {
+      final guia = GuiaPesca(
+        nombre: _nombreController.text,
+        telefono: _telefonoController.text,
+        email: _emailController.text.isEmpty ? null : _emailController.text,
+        logoUrl: _logoUrlController.text.isEmpty ? null : _logoUrlController.text,
+        facebook: _facebookController.text.isEmpty ? null : _facebookController.text,
+        instagram: _instagramController.text.isEmpty ? null : _instagramController.text,
+        whatsapp: _whatsappController.text.isEmpty ? null : _whatsappController.text,
+        descripcion: _descripcionController.text.isEmpty ? null : _descripcionController.text,
+      );
+
+      widget.onGuardado(guia);
+      Navigator.pop(context);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Guía agregado exitosamente'),
+          backgroundColor: Color(0xFF4CAF50),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Agregar Nuevo Guía',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFF2E7D32),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Nombre
+              TextFormField(
+                controller: _nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del Guía *',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor ingresa el nombre';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Teléfono
+              TextFormField(
+                controller: _telefonoController,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono *',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor ingresa el teléfono';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Email
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email (opcional)',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              
+              // Logo URL
+              TextFormField(
+                controller: _logoUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'URL del Logo (opcional)',
+                  prefixIcon: Icon(Icons.image),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Facebook
+              TextFormField(
+                controller: _facebookController,
+                decoration: const InputDecoration(
+                  labelText: 'Facebook (opcional)',
+                  prefixIcon: Icon(Icons.facebook),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Instagram
+              TextFormField(
+                controller: _instagramController,
+                decoration: const InputDecoration(
+                  labelText: 'Instagram (opcional)',
+                  prefixIcon: Icon(Icons.camera_alt),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // WhatsApp
+              TextFormField(
+                controller: _whatsappController,
+                decoration: const InputDecoration(
+                  labelText: 'WhatsApp (opcional)',
+                  prefixIcon: Icon(Icons.chat),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              
+              // Descripción
+              TextFormField(
+                controller: _descripcionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción (opcional)',
+                  prefixIcon: Icon(Icons.description),
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 4,
+              ),
+              const SizedBox(height: 24),
+              
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: const BorderSide(color: Colors.grey),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _guardarGuia,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Guardar'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
