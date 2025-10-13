@@ -4,11 +4,24 @@ workflows:
     name: iOS Workflow
     max_build_duration: 120
     instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: codemagic
     environment:
+      ios_signing:
+        distribution_type: development
+        bundle_identifier: com.example.guiappesca
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Set up keychain to be used for code signing
+        script: |
+          keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files $(xcode-project detect-bundle-id) \
+            --type IOS_APP_DEVELOPMENT \
+            --create
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
@@ -18,7 +31,7 @@ workflows:
       - name: Install pods
         script: |
           find . -name "Podfile" -execdir pod install \;
-      - name: Flutter build ipa
+      - name: Flutter build ipa (development)
         script: |
           flutter build ipa --release \
             --export-options-plist=/Users/builder/export_options.plist
