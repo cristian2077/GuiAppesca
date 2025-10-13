@@ -413,10 +413,10 @@ class PantallaPrincipal extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Text(
-                          'Hoy - 15 de Enero',
+                        child: Text(
+                          'Hoy - ${DateFormat('d \'de\' MMMM', 'es').format(DateTime.now())}',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 8,
