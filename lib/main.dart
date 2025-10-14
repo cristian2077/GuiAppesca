@@ -4141,9 +4141,24 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          // Ver pantalla individual del guía al tocar cualquier parte
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PantallaDetalleGuia(
+                guia: guia,
+                guiaIndex: index,
+                onGuiaUpdated: () => _cargarGuias(),
+              ),
+            ),
+          );
+        },
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(12),
+          leading: CircleAvatar(
           radius: 30,
           backgroundColor: const Color(0xFF4CAF50),
           child: guia.logoUrl != null && guia.logoUrl!.isNotEmpty
@@ -4184,22 +4199,6 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.visibility, color: Color(0xFF2196F3)),
-              onPressed: () async {
-                // Ver pantalla individual del guía
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PantallaDetalleGuia(
-                      guia: guia,
-                      guiaIndex: index,
-                      onGuiaUpdated: () => _cargarGuias(),
-                    ),
-                  ),
-                );
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.edit, color: Color(0xFFFF9800)),
               onPressed: () {
@@ -4289,6 +4288,7 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
               },
             ),
           ],
+        ),
         ),
       ),
     );
