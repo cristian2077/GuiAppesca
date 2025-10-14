@@ -352,193 +352,287 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     );
   }
 
-  // Construir fondo decorativo según el clima
+  // Construir fondo decorativo según el clima que llena todo el widget
   Widget _buildWeatherBackground(String iconCode) {
     return Positioned.fill(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(23),
         child: Stack(
           children: [
-            // Sol grande para clima soleado
+            // Sol grande para clima soleado - Llena el fondo
             if (iconCode == '01d' || iconCode == '01n') ...[
+              // Sol gigante de fondo
               Positioned(
-                top: -20,
-                right: -20,
+                top: -30,
+                right: -30,
                 child: Container(
-                  width: 80,
-                  height: 80,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Colors.yellow.withOpacity(0.4),
-                        Colors.orange.withOpacity(0.2),
+                        Colors.yellow.withOpacity(0.5),
+                        Colors.orange.withOpacity(0.3),
+                        Colors.yellow.withOpacity(0.2),
                         Colors.transparent,
                       ],
-                      stops: const [0.0, 0.6, 1.0],
+                      stops: const [0.0, 0.4, 0.7, 1.0],
                     ),
                   ),
                 ),
               ),
-              // Rayos del sol
+              // Sol adicional abajo a la izquierda para balance
               Positioned(
-                top: 10,
-                right: 10,
+                bottom: -40,
+                left: -40,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.orange.withOpacity(0.3),
+                        Colors.yellow.withOpacity(0.15),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              // Iconos de sol decorativos
+              Positioned(
+                bottom: 20,
+                right: 15,
                 child: Icon(
                   Icons.wb_sunny,
-                  size: 50,
-                  color: Colors.yellow.withOpacity(0.3),
+                  size: 35,
+                  color: Colors.yellow.withOpacity(0.25),
                 ),
               ),
             ],
             
-            // Nubes para clima nublado
+            // Nubes para clima nublado - Múltiples nubes grandes
             if (iconCode == '02d' || iconCode == '02n' || iconCode == '03d' || iconCode == '03n' || iconCode == '04d' || iconCode == '04n') ...[
+              // Nube grande superior derecha
               Positioned(
-                top: 10,
-                left: 20,
+                top: -10,
+                right: -15,
                 child: Icon(
                   Icons.cloud,
-                  size: 40,
-                  color: Colors.white.withOpacity(0.3),
-                ),
-              ),
-              Positioned(
-                top: 20,
-                right: 15,
-                child: Icon(
-                  Icons.cloud,
-                  size: 50,
-                  color: Colors.white.withOpacity(0.2),
-                ),
-              ),
-              Positioned(
-                bottom: 30,
-                left: 10,
-                child: Icon(
-                  Icons.cloud,
-                  size: 35,
+                  size: 90,
                   color: Colors.white.withOpacity(0.25),
                 ),
               ),
-            ],
-            
-            // Lluvia
-            if (iconCode == '09d' || iconCode == '09n' || iconCode == '10d' || iconCode == '10n') ...[
-              // Nubes
+              // Nube mediana superior izquierda
               Positioned(
-                top: 5,
-                left: 15,
+                top: 15,
+                left: -10,
                 child: Icon(
                   Icons.cloud,
-                  size: 45,
+                  size: 60,
                   color: Colors.white.withOpacity(0.3),
                 ),
               ),
-              // Gotas de lluvia
+              // Nube inferior centro
               Positioned(
-                top: 45,
-                left: 25,
+                bottom: -5,
+                left: 30,
                 child: Icon(
-                  Icons.water_drop,
-                  size: 12,
-                  color: Colors.white.withOpacity(0.4),
+                  Icons.cloud,
+                  size: 70,
+                  color: Colors.white.withOpacity(0.2),
                 ),
               ),
+              // Nube pequeña centro
+              Positioned(
+                top: 60,
+                right: 20,
+                child: Icon(
+                  Icons.cloud,
+                  size: 45,
+                  color: Colors.white.withOpacity(0.28),
+                ),
+              ),
+            ],
+            
+            // Lluvia - Nubes y muchas gotas
+            if (iconCode == '09d' || iconCode == '09n' || iconCode == '10d' || iconCode == '10n') ...[
+              // Nubes oscuras
+              Positioned(
+                top: -5,
+                left: 10,
+                child: Icon(
+                  Icons.cloud,
+                  size: 70,
+                  color: Colors.grey.withOpacity(0.35),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 5,
+                child: Icon(
+                  Icons.cloud,
+                  size: 60,
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+              ),
+              // Múltiples gotas de lluvia distribuidas
               Positioned(
                 top: 50,
-                left: 35,
-                child: Icon(
-                  Icons.water_drop,
-                  size: 10,
-                  color: Colors.white.withOpacity(0.35),
-                ),
-              ),
-              Positioned(
-                top: 55,
                 left: 20,
-                child: Icon(
-                  Icons.water_drop,
-                  size: 14,
-                  color: Colors.white.withOpacity(0.4),
-                ),
+                child: Icon(Icons.water_drop, size: 14, color: Colors.blue.withOpacity(0.5)),
               ),
               Positioned(
                 top: 60,
                 left: 40,
-                child: Icon(
-                  Icons.water_drop,
-                  size: 11,
-                  color: Colors.white.withOpacity(0.3),
-                ),
+                child: Icon(Icons.water_drop, size: 12, color: Colors.blue.withOpacity(0.45)),
+              ),
+              Positioned(
+                top: 70,
+                left: 30,
+                child: Icon(Icons.water_drop, size: 13, color: Colors.blue.withOpacity(0.5)),
+              ),
+              Positioned(
+                top: 55,
+                right: 40,
+                child: Icon(Icons.water_drop, size: 11, color: Colors.blue.withOpacity(0.45)),
+              ),
+              Positioned(
+                top: 65,
+                right: 55,
+                child: Icon(Icons.water_drop, size: 12, color: Colors.blue.withOpacity(0.5)),
+              ),
+              Positioned(
+                top: 75,
+                right: 45,
+                child: Icon(Icons.water_drop, size: 10, color: Colors.blue.withOpacity(0.4)),
+              ),
+              Positioned(
+                bottom: 40,
+                left: 50,
+                child: Icon(Icons.water_drop, size: 13, color: Colors.blue.withOpacity(0.45)),
+              ),
+              Positioned(
+                bottom: 35,
+                right: 30,
+                child: Icon(Icons.water_drop, size: 11, color: Colors.blue.withOpacity(0.5)),
               ),
             ],
             
-            // Tormenta
+            // Tormenta - Nubes oscuras y múltiples rayos
             if (iconCode == '11d' || iconCode == '11n') ...[
               Positioned(
-                top: 10,
-                right: 20,
+                top: -10,
+                right: -5,
                 child: Icon(
                   Icons.cloud,
-                  size: 50,
-                  color: Colors.grey.withOpacity(0.4),
+                  size: 85,
+                  color: Colors.grey.shade800.withOpacity(0.4),
                 ),
               ),
               Positioned(
+                top: 10,
+                left: 5,
+                child: Icon(
+                  Icons.cloud,
+                  size: 70,
+                  color: Colors.grey.shade700.withOpacity(0.35),
+                ),
+              ),
+              // Rayos
+              Positioned(
                 top: 50,
-                right: 30,
+                right: 25,
                 child: Icon(
                   Icons.flash_on,
-                  size: 30,
+                  size: 40,
+                  color: Colors.yellow.withOpacity(0.7),
+                ),
+              ),
+              Positioned(
+                bottom: 35,
+                left: 30,
+                child: Icon(
+                  Icons.flash_on,
+                  size: 28,
                   color: Colors.yellow.withOpacity(0.6),
                 ),
               ),
             ],
             
-            // Nieve
+            // Nieve - Múltiples copos cayendo
             if (iconCode == '13d' || iconCode == '13n') ...[
               Positioned(
                 top: 15,
                 left: 20,
-                child: Icon(
-                  Icons.ac_unit,
-                  size: 25,
-                  color: Colors.white.withOpacity(0.5),
-                ),
+                child: Icon(Icons.ac_unit, size: 28, color: Colors.white.withOpacity(0.6)),
               ),
               Positioned(
-                top: 30,
+                top: 25,
                 right: 25,
-                child: Icon(
-                  Icons.ac_unit,
-                  size: 20,
-                  color: Colors.white.withOpacity(0.4),
-                ),
+                child: Icon(Icons.ac_unit, size: 24, color: Colors.white.withOpacity(0.55)),
+              ),
+              Positioned(
+                top: 50,
+                left: 45,
+                child: Icon(Icons.ac_unit, size: 22, color: Colors.white.withOpacity(0.5)),
+              ),
+              Positioned(
+                top: 60,
+                right: 40,
+                child: Icon(Icons.ac_unit, size: 20, color: Colors.white.withOpacity(0.6)),
               ),
               Positioned(
                 bottom: 40,
                 left: 30,
-                child: Icon(
-                  Icons.ac_unit,
-                  size: 18,
-                  color: Colors.white.withOpacity(0.45),
-                ),
+                child: Icon(Icons.ac_unit, size: 26, color: Colors.white.withOpacity(0.55)),
+              ),
+              Positioned(
+                bottom: 35,
+                right: 20,
+                child: Icon(Icons.ac_unit, size: 23, color: Colors.white.withOpacity(0.6)),
+              ),
+              Positioned(
+                bottom: 55,
+                left: 55,
+                child: Icon(Icons.ac_unit, size: 19, color: Colors.white.withOpacity(0.5)),
               ),
             ],
             
-            // Niebla
+            // Niebla - Capas horizontales que llenan el widget
             if (iconCode == '50d' || iconCode == '50n') ...[
               Positioned(
-                top: 20,
-                left: 10,
-                right: 10,
+                top: 15,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 35,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.35),
+                        Colors.white.withOpacity(0.35),
+                        Colors.white.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 55,
+                left: 0,
+                right: 0,
                 child: Container(
                   height: 30,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
                         Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.3),
                         Colors.white.withOpacity(0.3),
                         Colors.white.withOpacity(0.0),
                       ],
@@ -547,15 +641,16 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                 ),
               ),
               Positioned(
-                bottom: 30,
-                left: 10,
-                right: 10,
+                bottom: 20,
+                left: 0,
+                right: 0,
                 child: Container(
-                  height: 25,
+                  height: 40,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
                         Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.25),
                         Colors.white.withOpacity(0.25),
                         Colors.white.withOpacity(0.0),
                       ],
