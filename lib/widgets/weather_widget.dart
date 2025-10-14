@@ -114,16 +114,23 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     width: 2,
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Column(
+                child: Stack(
+                  children: [
+                    // Fondo decorativo según el clima
+                    if (!isLoading && weatherData != null)
+                      _buildWeatherBackground(weatherData!.icon),
+                    
+                    // Contenido principal
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             // Header con localización
@@ -334,12 +341,232 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                             ),
                           ],
                         ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  // Construir fondo decorativo según el clima
+  Widget _buildWeatherBackground(String iconCode) {
+    return Positioned.fill(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(23),
+        child: Stack(
+          children: [
+            // Sol grande para clima soleado
+            if (iconCode == '01d' || iconCode == '01n') ...[
+              Positioned(
+                top: -20,
+                right: -20,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.yellow.withOpacity(0.4),
+                        Colors.orange.withOpacity(0.2),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.6, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              // Rayos del sol
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Icon(
+                  Icons.wb_sunny,
+                  size: 50,
+                  color: Colors.yellow.withOpacity(0.3),
+                ),
+              ),
+            ],
+            
+            // Nubes para clima nublado
+            if (iconCode == '02d' || iconCode == '02n' || iconCode == '03d' || iconCode == '03n' || iconCode == '04d' || iconCode == '04n') ...[
+              Positioned(
+                top: 10,
+                left: 20,
+                child: Icon(
+                  Icons.cloud,
+                  size: 40,
+                  color: Colors.white.withOpacity(0.3),
+                ),
+              ),
+              Positioned(
+                top: 20,
+                right: 15,
+                child: Icon(
+                  Icons.cloud,
+                  size: 50,
+                  color: Colors.white.withOpacity(0.2),
+                ),
+              ),
+              Positioned(
+                bottom: 30,
+                left: 10,
+                child: Icon(
+                  Icons.cloud,
+                  size: 35,
+                  color: Colors.white.withOpacity(0.25),
+                ),
+              ),
+            ],
+            
+            // Lluvia
+            if (iconCode == '09d' || iconCode == '09n' || iconCode == '10d' || iconCode == '10n') ...[
+              // Nubes
+              Positioned(
+                top: 5,
+                left: 15,
+                child: Icon(
+                  Icons.cloud,
+                  size: 45,
+                  color: Colors.white.withOpacity(0.3),
+                ),
+              ),
+              // Gotas de lluvia
+              Positioned(
+                top: 45,
+                left: 25,
+                child: Icon(
+                  Icons.water_drop,
+                  size: 12,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ),
+              Positioned(
+                top: 50,
+                left: 35,
+                child: Icon(
+                  Icons.water_drop,
+                  size: 10,
+                  color: Colors.white.withOpacity(0.35),
+                ),
+              ),
+              Positioned(
+                top: 55,
+                left: 20,
+                child: Icon(
+                  Icons.water_drop,
+                  size: 14,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ),
+              Positioned(
+                top: 60,
+                left: 40,
+                child: Icon(
+                  Icons.water_drop,
+                  size: 11,
+                  color: Colors.white.withOpacity(0.3),
+                ),
+              ),
+            ],
+            
+            // Tormenta
+            if (iconCode == '11d' || iconCode == '11n') ...[
+              Positioned(
+                top: 10,
+                right: 20,
+                child: Icon(
+                  Icons.cloud,
+                  size: 50,
+                  color: Colors.grey.withOpacity(0.4),
+                ),
+              ),
+              Positioned(
+                top: 50,
+                right: 30,
+                child: Icon(
+                  Icons.flash_on,
+                  size: 30,
+                  color: Colors.yellow.withOpacity(0.6),
+                ),
+              ),
+            ],
+            
+            // Nieve
+            if (iconCode == '13d' || iconCode == '13n') ...[
+              Positioned(
+                top: 15,
+                left: 20,
+                child: Icon(
+                  Icons.ac_unit,
+                  size: 25,
+                  color: Colors.white.withOpacity(0.5),
+                ),
+              ),
+              Positioned(
+                top: 30,
+                right: 25,
+                child: Icon(
+                  Icons.ac_unit,
+                  size: 20,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ),
+              Positioned(
+                bottom: 40,
+                left: 30,
+                child: Icon(
+                  Icons.ac_unit,
+                  size: 18,
+                  color: Colors.white.withOpacity(0.45),
+                ),
+              ),
+            ],
+            
+            // Niebla
+            if (iconCode == '50d' || iconCode == '50n') ...[
+              Positioned(
+                top: 20,
+                left: 10,
+                right: 10,
+                child: Container(
+                  height: 30,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.3),
+                        Colors.white.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 30,
+                left: 10,
+                right: 10,
+                child: Container(
+                  height: 25,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.25),
+                        Colors.white.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
