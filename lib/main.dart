@@ -4035,19 +4035,6 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Título
-            const Text(
-              'Servicios de Guías de Pesca',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2E7D32),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: 24),
-            
             // Botón para agregar nuevo guía
             ElevatedButton.icon(
               onPressed: () {
