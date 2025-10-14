@@ -2327,16 +2327,16 @@ ${booking.notes != null && booking.notes!.isNotEmpty ? '\n━━━━━━━�
 
     try {
       // Compartir usando share_plus
-      final result = await Share.share(
+      await Share.share(
         shareText,
         subject: '🎣 Contratación de Pesca - ${booking.clientName}',
       );
 
-      // Mostrar mensaje según el resultado
-      if (result.status == ShareResultStatus.success && mounted) {
+      // Mostrar mensaje de confirmación
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Contratación compartida exitosamente'),
+            content: Text('✅ Compartir contratación'),
             backgroundColor: Color(0xFF4CAF50),
             duration: Duration(seconds: 2),
           ),
