@@ -1737,12 +1737,34 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
     }
   }
 
+  // Expandir fechas de contrataciones para marcar todos los días en el calendario
+  List<DateTime> _expandBookingDates(List<Booking> bookings) {
+    List<DateTime> allDates = [];
+    
+    for (var booking in bookings) {
+      // Agregar el día inicial
+      allDates.add(booking.date);
+      
+      // Agregar los días adicionales según fishingDays
+      for (int i = 1; i < booking.fishingDays; i++) {
+        allDates.add(booking.date.add(Duration(days: i)));
+      }
+    }
+    
+    return allDates;
+  }
+
   // Mostrar contrataciones de una fecha específica
   void _showDateBookings(DateTime selectedDate) {
-    final dayBookings = bookings.where((booking) =>
-        booking.date.year == selectedDate.year &&
-        booking.date.month == selectedDate.month &&
-        booking.date.day == selectedDate.day).toList();
+    // Buscar contrataciones que incluyan la fecha seleccionada
+    final dayBookings = bookings.where((booking) {
+      final startDate = booking.date;
+      final endDate = booking.date.add(Duration(days: booking.fishingDays - 1));
+      
+      // Verificar si selectedDate está dentro del rango de la contratación
+      return selectedDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
+             selectedDate.isBefore(endDate.add(const Duration(days: 1)));
+    }).toList();
 
     showDialog(
       context: context,
@@ -1922,7 +1944,7 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                 
                 // Calendario de disponibilidad
                 CalendarWidget(
-                  bookedDates: bookings.map((booking) => booking.date).toList(),
+                  bookedDates: _expandBookingDates(bookings),
                   onDateSelected: (selectedDate) {
                     _showDateBookings(selectedDate);
                   },
