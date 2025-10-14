@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import 'widgets/calendar_widget.dart';
 
 void main() async {
@@ -2274,106 +2275,84 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
     );
   }
 
-  void _shareBooking(Booking booking) {
+  // Compartir contratación por WhatsApp, Email, etc.
+  Future<void> _shareBooking(Booking booking) async {
+    // Calcular fecha de finalización
+    final fechaInicio = DateFormat('dd/MM/yyyy').format(booking.date);
+    final fechaFin = DateFormat('dd/MM/yyyy').format(
+      booking.date.add(Duration(days: booking.fishingDays - 1))
+    );
+    
     final String shareText = '''
-🎣 Contratación de Pesca - GuiAppesca
+🎣 CONTRATACIÓN DE PESCA - GuiAppesca
 
-👤 Cliente: ${booking.clientName}
+━━━━━━━━━━━━━━━━━━━━━━
+📋 DATOS DEL CLIENTE
+━━━━━━━━━━━━━━━━━━━━━━
+👤 Nombre: ${booking.clientName}
 📞 Teléfono: ${booking.clientPhone}
 📍 Ubicación: ${booking.clientLocation}
-📅 Fecha: ${DateFormat('dd/MM/yyyy').format(booking.date)}
-👥 Pescadores: ${booking.numberOfFishermen}
-🐟 Especies: ${booking.targetSpecies.join(', ')}
-🎣 Modo: ${booking.fishingMode.displayName}
-💰 Precio Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}
-💳 Seña: \$${NumberFormat('#,##0', 'es').format(booking.depositAmount)}
-✅ Estado: ${booking.paymentStatus.displayName}
-${booking.notes != null ? '📝 Notas: ${booking.notes}' : ''}
 
-Generado por GuiAppesca
+━━━━━━━━━━━━━━━━━━━━━━
+📅 DETALLES DE LA PESCA
+━━━━━━━━━━━━━━━━━━━━━━
+📆 Fecha Inicio: $fechaInicio
+📆 Fecha Fin: $fechaFin
+🗓️ Días de Pesca: ${booking.fishingDays} ${booking.fishingDays == 1 ? 'día' : 'días'}
+👥 Cantidad de Pescadores: ${booking.numberOfFishermen}
+🐟 Especies Objetivo: ${booking.targetSpecies.join(', ')}
+🎣 Modalidad: ${booking.fishingMode.displayName}
 
----
-Comprobante de acuerdos con el guía de pesca
+━━━━━━━━━━━━━━━━━━━━━━
+📦 SERVICIOS INCLUIDOS
+━━━━━━━━━━━━━━━━━━━━━━
+${booking.additionalBoats.isNotEmpty ? '⛵ Embarcaciones Adicionales: ${booking.additionalBoats.join(', ')}\n' : ''}${booking.includesBait ? '🪱 Carnada: Incluida\n' : ''}${booking.equipmentRental ? '🎣 Alquiler de Equipo: Incluido\n' : ''}${booking.includesAccommodation ? '🏠 Alojamiento: ${booking.accommodationNights} ${booking.accommodationNights == 1 ? 'noche' : 'noches'}\n' : ''}${booking.includesMeals ? '🍽️ Comidas: Incluidas\n' : ''}
+━━━━━━━━━━━━━━━━━━━━━━
+💰 INFORMACIÓN DE PAGO
+━━━━━━━━━━━━━━━━━━━━━━
+💵 Precio Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}
+💳 Seña Abonada: \$${NumberFormat('#,##0', 'es').format(booking.depositAmount)}
+💰 Saldo Restante: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice - booking.depositAmount)}
+✅ Estado del Pago: ${booking.paymentStatus.displayName}
+${booking.notes != null && booking.notes!.isNotEmpty ? '\n━━━━━━━━━━━━━━━━━━━━━━\n📝 NOTAS ADICIONALES\n━━━━━━━━━━━━━━━━━━━━━━\n${booking.notes}\n' : ''}
+━━━━━━━━━━━━━━━━━━━━━━
+
+📱 Generado por GuiAppesca
+🎣 Tu guía de pesca digital
+
+━━━━━━━━━━━━━━━━━━━━━━
+✍️ Comprobante de acuerdos con el guía de pesca
+━━━━━━━━━━━━━━━━━━━━━━
 ''';
 
-    // Simular compartir (en una app real usarías share_plus)
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Compartir Contratación',
-            style: TextStyle(
-              color: Color(0xFF4CAF50),
-              fontWeight: FontWeight.bold,
-            ),
+    try {
+      // Compartir usando share_plus
+      final result = await Share.share(
+        shareText,
+        subject: '🎣 Contratación de Pesca - ${booking.clientName}',
+      );
+
+      // Mostrar mensaje según el resultado
+      if (result.status == ShareResultStatus.success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Contratación compartida exitosamente'),
+            backgroundColor: Color(0xFF4CAF50),
+            duration: Duration(seconds: 2),
           ),
-          content: Container(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.share,
-                  size: 48,
-                  color: Color(0xFF4CAF50),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Contenido listo para compartir:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                  child: Text(
-                    shareText,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Este comprobante incluye todos los detalles del acuerdo con el guía de pesca.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF666666),
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Aquí copiarías al portapapeles
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Texto copiado al portapapeles'),
-                    backgroundColor: Color(0xFF4CAF50),
-                  ),
-                );
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Copiar Texto',
-                style: TextStyle(color: Color(0xFF4CAF50)),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
         );
-      },
-    );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al compartir: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   // Método para editar una contratación
