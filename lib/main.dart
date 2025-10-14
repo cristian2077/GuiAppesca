@@ -4317,6 +4317,7 @@ class GuiaPesca {
   final String? facebook;
   final String? instagram;
   final String? whatsapp;
+  final String? tiktok;
   final List<String> fotos; // Lista de rutas de fotos
   final String? descripcion;
 
@@ -4328,6 +4329,7 @@ class GuiaPesca {
     this.facebook,
     this.instagram,
     this.whatsapp,
+    this.tiktok,
     List<String>? fotos,
     this.descripcion,
   }) : fotos = fotos ?? [];
@@ -4342,6 +4344,7 @@ class GuiaPesca {
       'facebook': facebook,
       'instagram': instagram,
       'whatsapp': whatsapp,
+      'tiktok': tiktok,
       'fotos': fotos,
       'descripcion': descripcion,
     };
@@ -4357,6 +4360,7 @@ class GuiaPesca {
       facebook: json['facebook'],
       instagram: json['instagram'],
       whatsapp: json['whatsapp'],
+      tiktok: json['tiktok'],
       fotos: json['fotos'] != null ? List<String>.from(json['fotos']) : [],
       descripcion: json['descripcion'],
     );
@@ -4452,6 +4456,7 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
   final _facebookController = TextEditingController();
   final _instagramController = TextEditingController();
   final _whatsappController = TextEditingController();
+  final _tiktokController = TextEditingController();
   final _descripcionController = TextEditingController();
   
   String? _logoImagePath;
@@ -4465,6 +4470,7 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
     _facebookController.dispose();
     _instagramController.dispose();
     _whatsappController.dispose();
+    _tiktokController.dispose();
     _descripcionController.dispose();
     super.dispose();
   }
@@ -4515,6 +4521,7 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
         facebook: _facebookController.text.isEmpty ? null : _facebookController.text,
         instagram: _instagramController.text.isEmpty ? null : _instagramController.text,
         whatsapp: _whatsappController.text.isEmpty ? null : _whatsappController.text,
+        tiktok: _tiktokController.text.isEmpty ? null : _tiktokController.text,
         descripcion: _descripcionController.text.isEmpty ? null : _descripcionController.text,
       );
 
@@ -4725,6 +4732,21 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
               ),
               const SizedBox(height: 16),
               
+              // TikTok
+              TextFormField(
+                controller: _tiktokController,
+                decoration: const InputDecoration(
+                  labelText: 'TikTok (opcional)',
+                  hintText: 'https://tiktok.com/@tu_usuario',
+                  prefixIcon: Icon(Icons.video_library),
+                  border: OutlineInputBorder(),
+                  helperText: 'Enlace completo o @usuario',
+                  helperMaxLines: 1,
+                ),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 16),
+              
               // Descripción
               TextFormField(
                 controller: _descripcionController,
@@ -4797,6 +4819,7 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
   late TextEditingController _facebookController;
   late TextEditingController _instagramController;
   late TextEditingController _whatsappController;
+  late TextEditingController _tiktokController;
   late TextEditingController _descripcionController;
   
   String? _logoImagePath;
@@ -4811,6 +4834,7 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
     _facebookController = TextEditingController(text: widget.guia.facebook ?? '');
     _instagramController = TextEditingController(text: widget.guia.instagram ?? '');
     _whatsappController = TextEditingController(text: widget.guia.whatsapp ?? '');
+    _tiktokController = TextEditingController(text: widget.guia.tiktok ?? '');
     _descripcionController = TextEditingController(text: widget.guia.descripcion ?? '');
     _logoImagePath = widget.guia.logoUrl;
   }
@@ -4823,6 +4847,7 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
     _facebookController.dispose();
     _instagramController.dispose();
     _whatsappController.dispose();
+    _tiktokController.dispose();
     _descripcionController.dispose();
     super.dispose();
   }
@@ -5005,6 +5030,21 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
               ),
               const SizedBox(height: 16),
               
+              // TikTok
+              TextFormField(
+                controller: _tiktokController,
+                decoration: const InputDecoration(
+                  labelText: 'TikTok (opcional)',
+                  hintText: 'https://tiktok.com/@tu_usuario',
+                  prefixIcon: Icon(Icons.video_library),
+                  border: OutlineInputBorder(),
+                  helperText: 'Enlace completo o @usuario',
+                  helperMaxLines: 1,
+                ),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 16),
+              
               // Descripción
               TextFormField(
                 controller: _descripcionController,
@@ -5102,6 +5142,7 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
           facebook: widget.guia.facebook,
           instagram: widget.guia.instagram,
           whatsapp: widget.guia.whatsapp,
+          tiktok: widget.guia.tiktok,
           descripcion: widget.guia.descripcion,
           fotos: fotos,
         );
@@ -5286,7 +5327,7 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
             ),
             
             // Redes sociales
-            if (widget.guia.facebook != null || widget.guia.instagram != null || widget.guia.whatsapp != null)
+            if (widget.guia.facebook != null || widget.guia.instagram != null || widget.guia.whatsapp != null || widget.guia.tiktok != null)
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -5298,6 +5339,8 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
                       _buildSocialButton(Icons.camera_alt, 'Instagram', widget.guia.instagram!),
                     if (widget.guia.whatsapp != null && widget.guia.whatsapp!.isNotEmpty)
                       _buildSocialButton(Icons.chat, 'WhatsApp', widget.guia.whatsapp!),
+                    if (widget.guia.tiktok != null && widget.guia.tiktok!.isNotEmpty)
+                      _buildSocialButton(Icons.video_library, 'TikTok', widget.guia.tiktok!),
                   ],
                 ),
               ),
@@ -5458,6 +5501,14 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
             uri = Uri.parse(value.startsWith('http') ? value : 'https://facebook.com/$value');
           } else if (label == 'Instagram' && value.isNotEmpty) {
             uri = Uri.parse(value.startsWith('http') ? value : 'https://instagram.com/$value');
+          } else if (label == 'TikTok' && value.isNotEmpty) {
+            // Manejar @usuario o URL completa
+            if (value.startsWith('http')) {
+              uri = Uri.parse(value);
+            } else {
+              final username = value.replaceAll('@', '');
+              uri = Uri.parse('https://tiktok.com/@$username');
+            }
           }
           
           if (uri != null) {
