@@ -9,6 +9,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
 import 'widgets/calendar_widget.dart';
 
 void main() async {
@@ -3980,6 +3983,7 @@ class PantallaServiciosGuia extends StatefulWidget {
 
 class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
   List<GuiaPesca> guias = []; // Lista de guías cargados
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -3988,9 +3992,27 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
   }
 
   Future<void> _cargarGuias() async {
-    // Aquí se cargarían los guías desde SharedPreferences
-    // Por ahora dejamos la lista vacía
-    setState(() {});
+    try {
+      final loadedGuias = await GuiasStorage.loadGuias();
+      if (mounted) {
+        setState(() {
+          guias = loadedGuias;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar guías: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -4034,10 +4056,28 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => PantallaAgregarGuia(
-                      onGuardado: (guia) {
-                        setState(() {
-                          guias.add(guia);
-                        });
+                      onGuardado: (guia) async {
+                        try {
+                          await GuiasStorage.addGuia(guia);
+                          await _cargarGuias();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✅ Guía guardado exitosamente'),
+                                backgroundColor: Color(0xFF4CAF50),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('❌ Error al guardar: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       },
                     ),
                   ),
@@ -4121,15 +4161,25 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
           backgroundColor: const Color(0xFF4CAF50),
           child: guia.logoUrl != null && guia.logoUrl!.isNotEmpty
               ? ClipOval(
-                  child: Image.network(
-                    guia.logoUrl!,
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.person, size: 30, color: Colors.white);
-                    },
-                  ),
+                  child: guia.logoUrl!.startsWith('http')
+                      ? Image.network(
+                          guia.logoUrl!,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.person, size: 30, color: Colors.white);
+                          },
+                        )
+                      : Image.file(
+                          File(guia.logoUrl!),
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.person, size: 30, color: Colors.white);
+                          },
+                        ),
                 )
               : const Icon(Icons.person, size: 30, color: Colors.white),
         ),
@@ -4149,12 +4199,54 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
           children: [
             IconButton(
               icon: const Icon(Icons.visibility, color: Color(0xFF2196F3)),
-              onPressed: () {
+              onPressed: () async {
                 // Ver pantalla individual del guía
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PantallaDetalleGuia(
+                      guia: guia,
+                      guiaIndex: index,
+                      onGuiaUpdated: () => _cargarGuias(),
+                    ),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Color(0xFFFF9800)),
+              onPressed: () {
+                // Editar guía
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PantallaDetalleGuia(guia: guia),
+                    builder: (context) => PantallaEditarGuia(
+                      guia: guia,
+                      guiaIndex: index,
+                      onGuardado: (guiaActualizado) async {
+                        try {
+                          await GuiasStorage.updateGuia(index, guiaActualizado);
+                          await _cargarGuias();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✅ Guía actualizado exitosamente'),
+                                backgroundColor: Color(0xFF4CAF50),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('❌ Error al actualizar: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
                   ),
                 );
               },
@@ -4162,11 +4254,50 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () {
-                setState(() {
-                  guias.removeAt(index);
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Guía eliminado')),
+                // Confirmar eliminación
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Eliminar Guía'),
+                    content: Text('¿Estás seguro de eliminar a ${guia.nombre}?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          try {
+                            await GuiasStorage.removeGuia(index);
+                            await _cargarGuias();
+                            if (mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('🗑️ Guía eliminado'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('❌ Error al eliminar: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: const Text(
+                          'Eliminar',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -4200,6 +4331,104 @@ class GuiaPesca {
     List<String>? fotos,
     this.descripcion,
   }) : fotos = fotos ?? [];
+
+  // Convertir GuiaPesca a Map para JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'nombre': nombre,
+      'telefono': telefono,
+      'email': email,
+      'logoUrl': logoUrl,
+      'facebook': facebook,
+      'instagram': instagram,
+      'whatsapp': whatsapp,
+      'fotos': fotos,
+      'descripcion': descripcion,
+    };
+  }
+
+  // Crear GuiaPesca desde Map
+  factory GuiaPesca.fromJson(Map<String, dynamic> json) {
+    return GuiaPesca(
+      nombre: json['nombre'],
+      telefono: json['telefono'],
+      email: json['email'],
+      logoUrl: json['logoUrl'],
+      facebook: json['facebook'],
+      instagram: json['instagram'],
+      whatsapp: json['whatsapp'],
+      fotos: json['fotos'] != null ? List<String>.from(json['fotos']) : [],
+      descripcion: json['descripcion'],
+    );
+  }
+}
+
+// Servicio para manejar la persistencia de guías
+class GuiasStorage {
+  static const String _guiasKey = 'saved_guias';
+
+  // Guardar lista de guías
+  static Future<void> saveGuias(List<GuiaPesca> guias) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> guiasJson = guias.map((guia) => json.encode(guia.toJson())).toList();
+      await prefs.setStringList(_guiasKey, guiasJson);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Cargar lista de guías
+  static Future<List<GuiaPesca>> loadGuias() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? guiasJson = prefs.getStringList(_guiasKey);
+    
+    if (guiasJson == null) {
+      return [];
+    }
+    
+    try {
+      return guiasJson.map((jsonString) {
+        final Map<String, dynamic> guiaMap = json.decode(jsonString);
+        return GuiaPesca.fromJson(guiaMap);
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Agregar un nuevo guía
+  static Future<void> addGuia(GuiaPesca guia) async {
+    try {
+      final guias = await loadGuias();
+      guias.add(guia);
+      await saveGuias(guias);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Actualizar un guía
+  static Future<void> updateGuia(int index, GuiaPesca guia) async {
+    try {
+      final guias = await loadGuias();
+      if (index >= 0 && index < guias.length) {
+        guias[index] = guia;
+        await saveGuias(guias);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Eliminar un guía
+  static Future<void> removeGuia(int index) async {
+    final guias = await loadGuias();
+    if (index >= 0 && index < guias.length) {
+      guias.removeAt(index);
+      await saveGuias(guias);
+    }
+  }
 }
 
 // Pantalla para agregar un nuevo guía
@@ -4220,23 +4449,60 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
   final _nombreController = TextEditingController();
   final _telefonoController = TextEditingController();
   final _emailController = TextEditingController();
-  final _logoUrlController = TextEditingController();
   final _facebookController = TextEditingController();
   final _instagramController = TextEditingController();
   final _whatsappController = TextEditingController();
   final _descripcionController = TextEditingController();
+  
+  String? _logoImagePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
     _nombreController.dispose();
     _telefonoController.dispose();
     _emailController.dispose();
-    _logoUrlController.dispose();
     _facebookController.dispose();
     _instagramController.dispose();
     _whatsappController.dispose();
     _descripcionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _seleccionarLogo() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _logoImagePath = image.path;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Logo seleccionado'),
+              backgroundColor: Color(0xFF4CAF50),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _guardarGuia() {
@@ -4245,7 +4511,7 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
         nombre: _nombreController.text,
         telefono: _telefonoController.text,
         email: _emailController.text.isEmpty ? null : _emailController.text,
-        logoUrl: _logoUrlController.text.isEmpty ? null : _logoUrlController.text,
+        logoUrl: _logoImagePath,
         facebook: _facebookController.text.isEmpty ? null : _facebookController.text,
         instagram: _instagramController.text.isEmpty ? null : _instagramController.text,
         whatsapp: _whatsappController.text.isEmpty ? null : _whatsappController.text,
@@ -4329,13 +4595,87 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
               ),
               const SizedBox(height: 16),
               
-              // Logo URL
-              TextFormField(
-                controller: _logoUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL del Logo (opcional)',
-                  prefixIcon: Icon(Icons.image),
-                  border: OutlineInputBorder(),
+              // Selector de Logo
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Logo del Guía',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    if (_logoImagePath != null)
+                      Center(
+                        child: Stack(
+                          children: [
+                            ClipOval(
+                              child: Image.file(
+                                File(_logoImagePath!),
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                icon: const Icon(Icons.close, color: Colors.red),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  padding: const EdgeInsets.all(4),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _logoImagePath = null;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Center(
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            size: 60,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    ElevatedButton.icon(
+                      onPressed: _seleccionarLogo,
+                      icon: const Icon(Icons.photo_library),
+                      label: Text(_logoImagePath == null ? 'Seleccionar Logo' : 'Cambiar Logo'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2196F3),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -4421,13 +4761,286 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
   }
 }
 
+// Pantalla para editar un guía existente
+class PantallaEditarGuia extends StatefulWidget {
+  final GuiaPesca guia;
+  final int guiaIndex;
+  final Function(GuiaPesca) onGuardado;
+
+  const PantallaEditarGuia({
+    super.key,
+    required this.guia,
+    required this.guiaIndex,
+    required this.onGuardado,
+  });
+
+  @override
+  State<PantallaEditarGuia> createState() => _PantallaEditarGuiaState();
+}
+
+class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nombreController;
+  late TextEditingController _telefonoController;
+  late TextEditingController _emailController;
+  late TextEditingController _facebookController;
+  late TextEditingController _instagramController;
+  late TextEditingController _whatsappController;
+  late TextEditingController _descripcionController;
+  
+  String? _logoImagePath;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _nombreController = TextEditingController(text: widget.guia.nombre);
+    _telefonoController = TextEditingController(text: widget.guia.telefono);
+    _emailController = TextEditingController(text: widget.guia.email ?? '');
+    _facebookController = TextEditingController(text: widget.guia.facebook ?? '');
+    _instagramController = TextEditingController(text: widget.guia.instagram ?? '');
+    _whatsappController = TextEditingController(text: widget.guia.whatsapp ?? '');
+    _descripcionController = TextEditingController(text: widget.guia.descripcion ?? '');
+    _logoImagePath = widget.guia.logoUrl;
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _telefonoController.dispose();
+    _emailController.dispose();
+    _facebookController.dispose();
+    _instagramController.dispose();
+    _whatsappController.dispose();
+    _descripcionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _seleccionarLogo() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _logoImagePath = image.path;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Logo seleccionado'),
+              backgroundColor: Color(0xFF4CAF50),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _guardarGuia() {
+    if (_formKey.currentState!.validate()) {
+      final guia = GuiaPesca(
+        nombre: _nombreController.text,
+        telefono: _telefonoController.text,
+        email: _emailController.text.isEmpty ? null : _emailController.text,
+        logoUrl: _logoImagePath,
+        facebook: _facebookController.text.isEmpty ? null : _facebookController.text,
+        instagram: _instagramController.text.isEmpty ? null : _instagramController.text,
+        whatsapp: _whatsappController.text.isEmpty ? null : _whatsappController.text,
+        descripcion: _descripcionController.text.isEmpty ? null : _descripcionController.text,
+        fotos: widget.guia.fotos, // Mantener las fotos existentes
+      );
+
+      widget.onGuardado(guia);
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Editar Guía',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFF2E7D32),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Nombre
+              TextFormField(
+                controller: _nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del Guía *',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor ingresa el nombre';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Teléfono
+              TextFormField(
+                controller: _telefonoController,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono *',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor ingresa el teléfono';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Email
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email (opcional)',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              
+              // Selector de Logo (versión compacta)
+              ElevatedButton.icon(
+                onPressed: _seleccionarLogo,
+                icon: const Icon(Icons.photo_library),
+                label: Text(_logoImagePath == null ? 'Seleccionar Logo' : 'Cambiar Logo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2196F3),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Facebook
+              TextFormField(
+                controller: _facebookController,
+                decoration: const InputDecoration(
+                  labelText: 'Facebook (opcional)',
+                  prefixIcon: Icon(Icons.facebook),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Instagram
+              TextFormField(
+                controller: _instagramController,
+                decoration: const InputDecoration(
+                  labelText: 'Instagram (opcional)',
+                  prefixIcon: Icon(Icons.camera_alt),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // WhatsApp
+              TextFormField(
+                controller: _whatsappController,
+                decoration: const InputDecoration(
+                  labelText: 'WhatsApp (opcional)',
+                  prefixIcon: Icon(Icons.chat),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              
+              // Descripción
+              TextFormField(
+                controller: _descripcionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción (opcional)',
+                  prefixIcon: Icon(Icons.description),
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 4,
+              ),
+              const SizedBox(height: 24),
+              
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: const BorderSide(color: Colors.grey),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _guardarGuia,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Guardar Cambios'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Pantalla de detalles individual del guía
 class PantallaDetalleGuia extends StatefulWidget {
   final GuiaPesca guia;
+  final int guiaIndex;
+  final VoidCallback onGuiaUpdated;
 
   const PantallaDetalleGuia({
     super.key,
     required this.guia,
+    required this.guiaIndex,
+    required this.onGuiaUpdated,
   });
 
   @override
@@ -4443,32 +5056,100 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
     fotos = List.from(widget.guia.fotos);
   }
 
-  void _agregarFoto() {
-    // Aquí se implementaría la selección de foto desde galería
-    // Por ahora simulamos agregando una URL de placeholder
-    setState(() {
-      fotos.add('https://via.placeholder.com/300x200?text=Nueva+Captura');
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('📸 Foto agregada (funcionalidad de selección próximamente)'),
-        backgroundColor: Color(0xFF4CAF50),
-      ),
-    );
+  Future<void> _agregarFoto() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          fotos.add(image.path);
+        });
+        
+        // Guardar cambios en el almacenamiento
+        final guiaActualizado = GuiaPesca(
+          nombre: widget.guia.nombre,
+          telefono: widget.guia.telefono,
+          email: widget.guia.email,
+          logoUrl: widget.guia.logoUrl,
+          facebook: widget.guia.facebook,
+          instagram: widget.guia.instagram,
+          whatsapp: widget.guia.whatsapp,
+          descripcion: widget.guia.descripcion,
+          fotos: fotos,
+        );
+        
+        await GuiasStorage.updateGuia(widget.guiaIndex, guiaActualizado);
+        widget.onGuiaUpdated();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('📸 Foto agregada exitosamente'),
+              backgroundColor: Color(0xFF4CAF50),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al agregar foto: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  void _eliminarFoto(int index) {
+  Future<void> _eliminarFoto(int index) async {
     setState(() {
       fotos.removeAt(index);
     });
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🗑️ Foto eliminada'),
-        backgroundColor: Colors.red,
-      ),
-    );
+    // Guardar cambios en el almacenamiento
+    try {
+      final guiaActualizado = GuiaPesca(
+        nombre: widget.guia.nombre,
+        telefono: widget.guia.telefono,
+        email: widget.guia.email,
+        logoUrl: widget.guia.logoUrl,
+        facebook: widget.guia.facebook,
+        instagram: widget.guia.instagram,
+        whatsapp: widget.guia.whatsapp,
+        descripcion: widget.guia.descripcion,
+        fotos: fotos,
+      );
+      
+      await GuiasStorage.updateGuia(widget.guiaIndex, guiaActualizado);
+      widget.onGuiaUpdated();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🗑️ Foto eliminada'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al eliminar foto: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -4743,38 +5424,76 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
   Widget _buildSocialButton(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      child: GestureDetector(
+        onTap: () async {
+          Uri? uri;
+          
+          if (label == 'WhatsApp' && value.isNotEmpty) {
+            // Limpiar número de WhatsApp (quitar espacios, guiones, etc.)
+            final phone = value.replaceAll(RegExp(r'[^\d+]'), '');
+            uri = Uri.parse('https://wa.me/$phone');
+          } else if (label == 'Facebook' && value.isNotEmpty) {
+            uri = Uri.parse(value.startsWith('http') ? value : 'https://facebook.com/$value');
+          } else if (label == 'Instagram' && value.isNotEmpty) {
+            uri = Uri.parse(value.startsWith('http') ? value : 'https://instagram.com/$value');
+          }
+          
+          if (uri != null) {
+            try {
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('❌ No se puede abrir $label')),
+                  );
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('❌ Error al abrir $label: $e')),
+                );
+              }
+            }
+          }
+        },
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF2E7D32),
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF2E7D32),
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFotoCard(String fotoUrl, int index) {
+    // Detectar si es una URL o ruta local
+    final isLocalFile = !fotoUrl.startsWith('http');
+    
     return Stack(
       children: [
         Container(
@@ -4790,20 +5509,35 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              fotoUrl,
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+            child: isLocalFile
+                ? Image.file(
+                    File(fotoUrl),
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                        ),
+                      );
+                    },
+                  )
+                : Image.network(
+                    fotoUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ),
         Positioned(
