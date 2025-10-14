@@ -334,17 +334,53 @@ class _WeatherWidgetState extends State<WeatherWidget> {
   }
 }
 
-// Clase temporal para la pantalla de clima (será movida al main.dart)
-class PantallaClima extends StatelessWidget {
+// Pantalla de pronóstico extendido de 10 días
+class PantallaClima extends StatefulWidget {
   const PantallaClima({super.key});
+
+  @override
+  State<PantallaClima> createState() => _PantallaClimaState();
+}
+
+class _PantallaClimaState extends State<PantallaClima> {
+  List<WeatherData>? forecast;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadForecast();
+  }
+
+  Future<void> _loadForecast() async {
+    try {
+      final data = await WeatherService.getForecast();
+      if (mounted) {
+        setState(() {
+          forecast = data;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pronóstico 10 Días'),
+        title: const Text(
+          'Pronóstico 10 Días',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -352,21 +388,253 @@ class PantallaClima extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF87CEEB),
+              Color(0xFF1976D2),
               Color(0xFF4682B4),
+              Color(0xFF87CEEB),
             ],
           ),
         ),
-        child: const Center(
-          child: Text(
-            'Pantalla de pronóstico en desarrollo',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-            ),
-          ),
-        ),
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : RefreshIndicator(
+                onRefresh: _loadForecast,
+                color: const Color(0xFF1976D2),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: forecast?.length ?? 0,
+                  itemBuilder: (context, index) {
+                    final day = forecast![index];
+                    final dayName = _getDayName(day.date);
+                    
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white,
+                              Colors.blue.shade50,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header con día y fecha
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        dayName,
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1976D2),
+                                        ),
+                                      ),
+                                      if (day.date != null)
+                                        Text(
+                                          '${day.date!.day}/${day.date!.month}/${day.date!.year}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  Icon(
+                                    _getWeatherIcon(day.icon),
+                                    size: 48,
+                                    color: const Color(0xFF1976D2),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Temperatura y descripción
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${day.temperature.toStringAsFixed(0)}°C',
+                                        style: const TextStyle(
+                                          fontSize: 36,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1976D2),
+                                        ),
+                                      ),
+                                      Text(
+                                        day.description,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (day.tempMin != null && day.tempMax != null)
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.arrow_upward, size: 16, color: Colors.red),
+                                            Text(
+                                              '${day.tempMax!.toStringAsFixed(0)}°',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.arrow_downward, size: 16, color: Colors.blue),
+                                            Text(
+                                              '${day.tempMin!.toStringAsFixed(0)}°',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.blue,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                              
+                              const Divider(height: 24),
+                              
+                              // Detalles adicionales
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildDetailItem(
+                                    Icons.water_drop,
+                                    'Humedad',
+                                    '${day.humidity}%',
+                                  ),
+                                  _buildDetailItem(
+                                    Icons.air,
+                                    'Viento',
+                                    '${day.windSpeed.toStringAsFixed(0)} km/h',
+                                  ),
+                                  if (day.precipitation != null)
+                                    _buildDetailItem(
+                                      Icons.grain,
+                                      'Lluvia',
+                                      '${day.precipitation!.toStringAsFixed(0)}%',
+                                    ),
+                                  if (day.clouds != null)
+                                    _buildDetailItem(
+                                      Icons.cloud,
+                                      'Nubes',
+                                      '${day.clouds}%',
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
       ),
     );
+  }
+
+  Widget _buildDetailItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, size: 24, color: const Color(0xFF1976D2)),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[600],
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getDayName(DateTime? date) {
+    if (date == null) return 'Hoy';
+    
+    final now = DateTime.now();
+    final difference = date.difference(DateTime(now.year, now.month, now.day)).inDays;
+    
+    if (difference == 0) return 'Hoy';
+    if (difference == 1) return 'Mañana';
+    
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    return days[date.weekday - 1];
+  }
+
+  IconData _getWeatherIcon(String iconCode) {
+    switch (iconCode) {
+      case '01d':
+      case '01n':
+        return Icons.wb_sunny;
+      case '02d':
+      case '02n':
+      case '03d':
+      case '03n':
+        return Icons.wb_cloudy;
+      case '04d':
+      case '04n':
+        return Icons.cloud;
+      case '09d':
+      case '09n':
+      case '10d':
+      case '10n':
+        return Icons.grain;
+      case '11d':
+      case '11n':
+        return Icons.flash_on;
+      case '13d':
+      case '13n':
+        return Icons.ac_unit;
+      case '50d':
+      case '50n':
+        return Icons.foggy;
+      default:
+        return Icons.wb_sunny;
+    }
   }
 }

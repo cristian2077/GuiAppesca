@@ -11,6 +11,11 @@ class WeatherData {
   final int humidity;
   final double windSpeed;
   final String icon;
+  final double? tempMin;
+  final double? tempMax;
+  final double? precipitation;
+  final int? clouds;
+  final DateTime? date;
 
   WeatherData({
     required this.location,
@@ -19,6 +24,11 @@ class WeatherData {
     required this.humidity,
     required this.windSpeed,
     required this.icon,
+    this.tempMin,
+    this.tempMax,
+    this.precipitation,
+    this.clouds,
+    this.date,
   });
 }
 
@@ -122,6 +132,9 @@ class WeatherService {
           humidity: data['main']['humidity'],
           windSpeed: data['wind']['speed'].toDouble(),
           icon: data['weather'][0]['icon'],
+          tempMin: data['main']['temp_min']?.toDouble(),
+          tempMax: data['main']['temp_max']?.toDouble(),
+          clouds: data['clouds']?['all'],
         );
       }
     } catch (e) {
@@ -169,9 +182,11 @@ class WeatherService {
         final data = json.decode(response.body);
         List<WeatherData> forecast = [];
         
-        // Tomar un pronóstico por día (cada 8 elementos = 1 día)
-        for (int i = 0; i < data['list'].length && i < 80; i += 8) {
+        // Tomar un pronóstico por día (cada 8 elementos = 1 día, mediodía)
+        for (int i = 4; i < data['list'].length && forecast.length < 10; i += 8) {
           final item = data['list'][i];
+          final dateTime = DateTime.parse(item['dt_txt']);
+          
           forecast.add(WeatherData(
             location: cityName,
             temperature: item['main']['temp'].toDouble(),
@@ -179,6 +194,11 @@ class WeatherService {
             humidity: item['main']['humidity'],
             windSpeed: item['wind']['speed'].toDouble(),
             icon: item['weather'][0]['icon'],
+            tempMin: item['main']['temp_min']?.toDouble(),
+            tempMax: item['main']['temp_max']?.toDouble(),
+            precipitation: item['pop'] != null ? (item['pop'] * 100).toDouble() : null,
+            clouds: item['clouds']?['all'],
+            date: dateTime,
           ));
         }
         
