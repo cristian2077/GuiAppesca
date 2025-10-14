@@ -68,10 +68,10 @@ class _WeatherWidgetState extends State<WeatherWidget> {
             scale: isPressed ? 0.95 : 1.0,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              width: 160,
-              height: 120,
+              width: 180,
+              height: 160,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(30),
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -108,14 +108,14 @@ class _WeatherWidgetState extends State<WeatherWidget> {
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
+                    color: Colors.white.withOpacity(0.4),
+                    width: 2,
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(14),
                   child: isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
@@ -131,161 +131,204 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(4),
+                                  padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: Colors.white.withOpacity(0.5),
-                                      width: 1,
+                                      width: 1.5,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.white.withOpacity(0.3),
                                         blurRadius: 4,
-                                        offset: const Offset(0, 1),
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
                                   child: const Icon(
                                     Icons.location_on,
                                     color: Colors.white,
-                                    size: 12,
+                                    size: 16,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     weatherData?.location ?? 'Paraná, ER',
                                     style: const TextStyle(
-                                      fontSize: 8,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
+                                      letterSpacing: 0.3,
                                       shadows: [
                                         Shadow(
-                                          offset: Offset(0.5, 0.5),
-                                          blurRadius: 1,
+                                          offset: Offset(1, 1),
+                                          blurRadius: 2,
                                           color: Colors.black45,
                                         ),
                                       ],
                                     ),
                                     overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            
+                            // Temperatura principal con icono
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  _getWeatherIcon(weatherData?.icon ?? '01d'),
+                                  color: Colors.white,
+                                  size: 32,
+                                  shadows: const [
+                                    Shadow(
+                                      offset: Offset(2, 2),
+                                      blurRadius: 4,
+                                      color: Colors.black45,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                ShaderMask(
+                                  shaderCallback: (bounds) => const LinearGradient(
+                                    colors: [Colors.white, Colors.yellow, Colors.orange],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ).createShader(bounds),
+                                  child: Text(
+                                    '${weatherData?.temperature.toStringAsFixed(0) ?? '28'}°',
+                                    style: const TextStyle(
+                                      fontSize: 42,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      height: 1.0,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(2, 2),
+                                          blurRadius: 4,
+                                          color: Colors.black54,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             
-                            // Temperatura principal
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [Colors.white, Colors.yellow, Colors.orange],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ).createShader(bounds),
-                              child: Text(
-                                '${weatherData?.temperature.toStringAsFixed(0) ?? '28'}°C',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(1, 1),
-                                      blurRadius: 2,
-                                      color: Colors.black54,
-                                    ),
-                                  ],
-                                ),
+                            // Descripción del clima
+                            Text(
+                              weatherData?.description ?? 'Soleado',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 2,
+                                    color: Colors.black45,
+                                  ),
+                                ],
                               ),
+                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             
-                            // Información adicional
+                            // Información adicional en columnas
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 // Humedad
-                                Row(
+                                Column(
                                   children: [
-                                    const Icon(
-                                      Icons.water_drop,
-                                      color: Colors.white,
-                                      size: 10,
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.water_drop,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
                                     ),
-                                    const SizedBox(width: 2),
+                                    const SizedBox(height: 4),
                                     Text(
                                       '${weatherData?.humidity ?? 65}%',
                                       style: const TextStyle(
-                                        fontSize: 7,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                         shadows: [
                                           Shadow(
-                                            offset: Offset(0.5, 0.5),
-                                            blurRadius: 1,
+                                            offset: Offset(1, 1),
+                                            blurRadius: 2,
                                             color: Colors.black45,
                                           ),
                                         ],
+                                      ),
+                                    ),
+                                    Text(
+                                      'Humedad',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white.withOpacity(0.9),
                                       ),
                                     ),
                                   ],
                                 ),
                                 
                                 // Viento
-                                Row(
+                                Column(
                                   children: [
-                                    const Icon(
-                                      Icons.air,
-                                      color: Colors.white,
-                                      size: 10,
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.air,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
                                     ),
-                                    const SizedBox(width: 2),
+                                    const SizedBox(height: 4),
                                     Text(
-                                      '${weatherData?.windSpeed.toStringAsFixed(0) ?? '12'} km/h',
+                                      '${weatherData?.windSpeed.toStringAsFixed(0) ?? '12'}',
                                       style: const TextStyle(
-                                        fontSize: 7,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                         shadows: [
                                           Shadow(
-                                            offset: Offset(0.5, 0.5),
-                                            blurRadius: 1,
+                                            offset: Offset(1, 1),
+                                            blurRadius: 2,
                                             color: Colors.black45,
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            
-                            // Estado del clima
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  _getWeatherIcon(weatherData?.icon ?? '01d'),
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  weatherData?.description ?? 'Soleado',
-                                  style: const TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0.5, 0.5),
-                                        blurRadius: 1,
-                                        color: Colors.black45,
+                                    Text(
+                                      'km/h',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white.withOpacity(0.9),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
