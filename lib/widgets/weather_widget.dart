@@ -72,16 +72,11 @@ class _WeatherWidgetState extends State<WeatherWidget> {
               height: 160,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF87CEEB), // Azul cielo
-                    Color(0xFF98D8E8), // Azul claro
-                    Color(0xFF87CEEB), // Azul cielo
-                    Color(0xFF4682B4), // Azul acero
-                  ],
-                  stops: [0.0, 0.3, 0.7, 1.0],
+                  colors: _getGradientColors(weatherData?.icon ?? '01d'),
+                  stops: const [0.0, 0.3, 0.7, 1.0],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -350,6 +345,86 @@ class _WeatherWidgetState extends State<WeatherWidget> {
         );
       },
     );
+  }
+
+  // Obtener colores de gradiente según el clima
+  List<Color> _getGradientColors(String iconCode) {
+    switch (iconCode) {
+      case '01d': // Soleado día
+      case '01n': // Soleado noche
+        return const [
+          Color(0xFFFDB813), // Amarillo brillante
+          Color(0xFFFFA500), // Naranja
+          Color(0xFFFF8C00), // Naranja oscuro
+          Color(0xFFFF7F50), // Coral
+        ];
+      
+      case '02d': // Pocas nubes día
+      case '02n': // Pocas nubes noche
+      case '03d': // Nubes dispersas
+      case '03n':
+        return const [
+          Color(0xFF87CEEB), // Azul cielo
+          Color(0xFFB0C4DE), // Azul claro acero
+          Color(0xFF87CEEB), // Azul cielo
+          Color(0xFF6495ED), // Azul aciano
+        ];
+      
+      case '04d': // Nubes rotas
+      case '04n':
+        return const [
+          Color(0xFF778899), // Gris pizarra claro
+          Color(0xFF87CEEB), // Azul cielo
+          Color(0xFF708090), // Gris pizarra
+          Color(0xFF696969), // Gris oscuro
+        ];
+      
+      case '09d': // Lluvia
+      case '09n':
+      case '10d':
+      case '10n':
+        return const [
+          Color(0xFF4682B4), // Azul acero
+          Color(0xFF5F9EA0), // Azul cadete
+          Color(0xFF4682B4), // Azul acero
+          Color(0xFF2F4F4F), // Gris pizarra oscuro
+        ];
+      
+      case '11d': // Tormenta
+      case '11n':
+        return const [
+          Color(0xFF2F4F4F), // Gris pizarra oscuro
+          Color(0xFF483D8B), // Azul pizarra oscuro
+          Color(0xFF191970), // Azul medianoche
+          Color(0xFF000080), // Azul marino
+        ];
+      
+      case '13d': // Nieve
+      case '13n':
+        return const [
+          Color(0xFFE0FFFF), // Cian claro
+          Color(0xFFB0E0E6), // Azul polvo
+          Color(0xFFADD8E6), // Azul claro
+          Color(0xFF87CEEB), // Azul cielo
+        ];
+      
+      case '50d': // Niebla
+      case '50n':
+        return const [
+          Color(0xFFD3D3D3), // Gris claro
+          Color(0xFFC0C0C0), // Plata
+          Color(0xFFB0C4DE), // Azul claro acero
+          Color(0xFFA9A9A9), // Gris oscuro
+        ];
+      
+      default:
+        return const [
+          Color(0xFF87CEEB),
+          Color(0xFF98D8E8),
+          Color(0xFF87CEEB),
+          Color(0xFF4682B4),
+        ];
+    }
   }
 
   // Construir fondo decorativo según el clima que llena todo el widget
