@@ -4685,9 +4685,13 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
                 controller: _facebookController,
                 decoration: const InputDecoration(
                   labelText: 'Facebook (opcional)',
+                  hintText: 'https://facebook.com/tu_pagina',
                   prefixIcon: Icon(Icons.facebook),
                   border: OutlineInputBorder(),
+                  helperText: 'Enlace completo o @usuario',
+                  helperMaxLines: 1,
                 ),
+                keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
               
@@ -4696,9 +4700,13 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
                 controller: _instagramController,
                 decoration: const InputDecoration(
                   labelText: 'Instagram (opcional)',
+                  hintText: 'https://instagram.com/tu_perfil',
                   prefixIcon: Icon(Icons.camera_alt),
                   border: OutlineInputBorder(),
+                  helperText: 'Enlace completo o @usuario',
+                  helperMaxLines: 1,
                 ),
+                keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
               
@@ -4707,8 +4715,11 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
                 controller: _whatsappController,
                 decoration: const InputDecoration(
                   labelText: 'WhatsApp (opcional)',
+                  hintText: '+54 9 11 1234-5678',
                   prefixIcon: Icon(Icons.chat),
                   border: OutlineInputBorder(),
+                  helperText: 'Número con código de país',
+                  helperMaxLines: 1,
                 ),
                 keyboardType: TextInputType.phone,
               ),
@@ -4954,9 +4965,13 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
                 controller: _facebookController,
                 decoration: const InputDecoration(
                   labelText: 'Facebook (opcional)',
+                  hintText: 'https://facebook.com/tu_pagina',
                   prefixIcon: Icon(Icons.facebook),
                   border: OutlineInputBorder(),
+                  helperText: 'Enlace completo o @usuario',
+                  helperMaxLines: 1,
                 ),
+                keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
               
@@ -4965,9 +4980,13 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
                 controller: _instagramController,
                 decoration: const InputDecoration(
                   labelText: 'Instagram (opcional)',
+                  hintText: 'https://instagram.com/tu_perfil',
                   prefixIcon: Icon(Icons.camera_alt),
                   border: OutlineInputBorder(),
+                  helperText: 'Enlace completo o @usuario',
+                  helperMaxLines: 1,
                 ),
+                keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
               
@@ -4976,8 +4995,11 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
                 controller: _whatsappController,
                 decoration: const InputDecoration(
                   labelText: 'WhatsApp (opcional)',
+                  hintText: '+54 9 11 1234-5678',
                   prefixIcon: Icon(Icons.chat),
                   border: OutlineInputBorder(),
+                  helperText: 'Número con código de país',
+                  helperMaxLines: 1,
                 ),
                 keyboardType: TextInputType.phone,
               ),
