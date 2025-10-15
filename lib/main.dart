@@ -3354,7 +3354,12 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
   String targetSpecies = '';
   
   Set<String>? _selectedSpecies;
-  Set<String> get selectedSpecies => _selectedSpecies ?? widget.booking.targetSpecies.toSet();
+  Set<String> get selectedSpecies {
+    if (_selectedSpecies == null) {
+      _selectedSpecies = widget.booking.targetSpecies.toSet();
+    }
+    return _selectedSpecies!;
+  }
   set selectedSpecies(Set<String> value) => _selectedSpecies = value;
   
   FishingMode? _selectedFishingMode;
@@ -3364,7 +3369,12 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
   Set<FishingMode> selectedFishingModes = {};
   
   List<String>? _additionalBoats;
-  List<String> get additionalBoats => _additionalBoats ?? List<String>.from(widget.booking.additionalBoats);
+  List<String> get additionalBoats {
+    if (_additionalBoats == null) {
+      _additionalBoats = List<String>.from(widget.booking.additionalBoats);
+    }
+    return _additionalBoats!;
+  }
   set additionalBoats(List<String> value) => _additionalBoats = value;
   
   bool? _includesBait;
