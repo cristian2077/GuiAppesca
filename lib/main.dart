@@ -1822,7 +1822,7 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
     setState(() => isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
-      final bookingsJson = prefs.getStringList('bookings') ?? [];
+      final bookingsJson = prefs.getStringList('saved_bookings') ?? [];
       setState(() {
         bookings = bookingsJson
             .map((json) => Booking.fromJson(jsonDecode(json)))
@@ -1841,7 +1841,7 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
       final prefs = await SharedPreferences.getInstance();
       bookings.removeAt(index);
       final bookingsJson = bookings.map((b) => jsonEncode(b.toJson())).toList();
-      await prefs.setStringList('bookings', bookingsJson);
+      await prefs.setStringList('saved_bookings', bookingsJson);
       
       setState(() {});
       
