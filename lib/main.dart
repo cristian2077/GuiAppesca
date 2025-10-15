@@ -774,40 +774,46 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                                   ),
                                 ),
                                 
+                                const SizedBox(width: 8),
+                                
                                 // Icono y estado
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      _climaIcono,
-                                      color: Colors.white,
-                                      size: 20,
-                                      shadows: const [
-                                        Shadow(
-                                          offset: Offset(1, 1),
-                                          blurRadius: 2,
-                                          color: Colors.black45,
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _climaEstado,
-                                      style: const TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
+                                Flexible(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        _climaIcono,
                                         color: Colors.white,
-                                        shadows: [
+                                        size: 20,
+                                        shadows: const [
                                           Shadow(
-                                            offset: Offset(0.5, 0.5),
-                                            blurRadius: 1,
+                                            offset: Offset(1, 1),
+                                            blurRadius: 2,
                                             color: Colors.black45,
                                           ),
                                         ],
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _climaEstado,
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          shadows: [
+                                            Shadow(
+                                              offset: Offset(0.5, 0.5),
+                                              blurRadius: 1,
+                                              color: Colors.black45,
+                                            ),
+                                          ],
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
