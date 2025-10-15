@@ -1946,7 +1946,9 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
                     itemBuilder: (context, index) {
                       final booking = bookings[index];
                       
-                      return Card(
+                      return GestureDetector(
+                        onTap: () => _mostrarDetallesBooking(booking, index),
+                        child: Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         elevation: 2,
                         shape: RoundedRectangleBorder(
@@ -2086,9 +2088,284 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
                             ],
                           ),
                         ),
+                      ),
                       );
                     },
                   ),
+      ),
+    );
+  }
+
+  void _mostrarDetallesBooking(Booking booking, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header con gradiente
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1976D2), Color(0xFF64B5F6)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.white, size: 28),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Detalles de Contratación',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Contenido
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Estado de pago
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _getPaymentStatusColor(booking.paymentStatus),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            booking.paymentStatus.displayName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Información del cliente
+                      _buildSeccionDetalle('Información del Cliente', [
+                        _buildItemDetalle(Icons.person, 'Nombre', booking.clientName),
+                        _buildItemDetalle(Icons.phone, 'Teléfono', booking.clientPhone),
+                        _buildItemDetalle(Icons.location_on, 'Ubicación', booking.clientLocation),
+                      ]),
+                      
+                      const Divider(height: 30),
+                      
+                      // Detalles de la pesca
+                      _buildSeccionDetalle('Detalles de la Pesca', [
+                        _buildItemDetalle(Icons.calendar_today, 'Fecha', DateFormat('dd/MM/yyyy').format(booking.date)),
+                        _buildItemDetalle(Icons.people, 'Pescadores', '${booking.numberOfFishermen}'),
+                        _buildItemDetalle(Icons.set_meal, 'Especies', booking.targetSpecies.join(', ')),
+                        _buildItemDetalle(Icons.directions_boat, 'Modo', booking.fishingMode.displayName),
+                        _buildItemDetalle(Icons.today, 'Días de pesca', '${booking.fishingDays}'),
+                      ]),
+                      
+                      const Divider(height: 30),
+                      
+                      // Servicios incluidos
+                      _buildSeccionDetalle('Servicios Incluidos', [
+                        if (booking.includesBait)
+                          _buildItemDetalle(Icons.check_circle, 'Carnada', 'Incluida', color: Colors.green),
+                        if (booking.equipmentRental)
+                          _buildItemDetalle(Icons.check_circle, 'Alquiler de equipo', 'Incluido', color: Colors.green),
+                        if (booking.includesAccommodation)
+                          _buildItemDetalle(Icons.check_circle, 'Alojamiento', '${booking.accommodationNights} noches', color: Colors.green),
+                        if (booking.includesMeals)
+                          _buildItemDetalle(Icons.check_circle, 'Comidas', 'Incluidas', color: Colors.green),
+                        if (booking.additionalBoats.isNotEmpty)
+                          _buildItemDetalle(Icons.directions_boat, 'Embarcaciones adicionales', booking.additionalBoats.join(', ')),
+                      ]),
+                      
+                      const Divider(height: 30),
+                      
+                      // Información financiera
+                      _buildSeccionDetalle('Información Financiera', [
+                        _buildItemDetalle(
+                          Icons.attach_money,
+                          'Precio Total',
+                          '\$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}',
+                          color: Colors.green,
+                          bold: true,
+                        ),
+                        _buildItemDetalle(
+                          Icons.payment,
+                          'Depósito',
+                          '\$${NumberFormat('#,##0', 'es').format(booking.depositAmount)}',
+                          color: Colors.orange,
+                        ),
+                      ]),
+                      
+                      if (booking.notes != null && booking.notes!.isNotEmpty) ...[
+                        const Divider(height: 30),
+                        _buildSeccionDetalle('Notas', [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              booking.notes!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF666666),
+                              ),
+                            ),
+                          ),
+                        ]),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Botones de acción
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _compartirBooking(booking),
+                        icon: const Icon(Icons.share, size: 18),
+                        label: const Text('Compartir'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CAF50),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Eliminar Contratación'),
+                              content: const Text(
+                                '¿Estás seguro de que deseas eliminar esta contratación?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancelar'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    _eliminarBooking(index);
+                                  },
+                                  child: const Text(
+                                    'Eliminar',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.delete, size: 18),
+                        label: const Text('Eliminar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF44336),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeccionDetalle(String titulo, List<Widget> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titulo,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...items,
+      ],
+    );
+  }
+
+  Widget _buildItemDetalle(IconData icon, String label, String value, {Color? color, bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color ?? const Color(0xFF1976D2)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF999999),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: color ?? const Color(0xFF333333),
+                    fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
