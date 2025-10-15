@@ -286,15 +286,18 @@ class PantallaPrincipal extends StatelessWidget {
                       
                       // Widgets de servicios en fila
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           // Widget de servicios de guías
-                          _buildServiciosGuiaWidget(context),
+                          Expanded(
+                            child: _buildServiciosGuiaWidget(context),
+                          ),
                           
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           
                           // Widget de servicios de hospedaje
-                          _buildServiciosHospedajeWidget(context),
+                          Expanded(
+                            child: _buildServiciosHospedajeWidget(context),
+                          ),
                         ],
                       ),
                     ],
@@ -720,7 +723,6 @@ class PantallaPrincipal extends StatelessWidget {
         scale: 1.0,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 340,
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
@@ -781,7 +783,7 @@ class PantallaPrincipal extends StatelessWidget {
                       child: const Text(
                         'Servicios de Guías de Pesca',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           shadows: [
@@ -811,7 +813,7 @@ class PantallaPrincipal extends StatelessWidget {
                     child: const Icon(
                       Icons.directions_boat,
                       color: Colors.white,
-                      size: 32,
+                      size: 28,
                       shadows: [
                         Shadow(
                           offset: Offset(1, 1),
@@ -842,7 +844,6 @@ class PantallaPrincipal extends StatelessWidget {
         scale: 1.0,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 160,
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
@@ -933,7 +934,7 @@ class PantallaPrincipal extends StatelessWidget {
                     child: const Icon(
                       Icons.hotel,
                       color: Colors.white,
-                      size: 32,
+                      size: 28,
                       shadows: [
                         Shadow(
                           offset: Offset(1, 1),
