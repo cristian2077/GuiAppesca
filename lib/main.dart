@@ -444,7 +444,6 @@ class PantallaPrincipal extends StatelessWidget {
                 ],
               ),
             ),
-            ),
           ),
         ),
       ),
