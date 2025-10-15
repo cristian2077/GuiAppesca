@@ -3772,7 +3772,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                     
                     // Nombre del cliente
                     _buildTextField(
-                      label: '👤 Nombre del cliente',
+                      label: '👤 Nombre del cliente *',
                       value: clientName,
                       onChanged: (value) => setState(() => clientName = value),
                       icon: Icons.person,
@@ -3781,7 +3781,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                     
                     // Teléfono del cliente
                     _buildTextField(
-                      label: '📞 Teléfono',
+                      label: '📞 Teléfono *',
                       value: clientPhone,
                       onChanged: (value) => setState(() => clientPhone = value),
                       icon: Icons.phone,
@@ -3791,7 +3791,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                     
                     // Localidad del cliente
                     _buildTextField(
-                      label: '📍 Localidad del cliente',
+                      label: '📍 Localidad del cliente *',
                       value: clientLocation,
                       onChanged: (value) => setState(() => clientLocation = value),
                       icon: Icons.location_on,
@@ -3800,7 +3800,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                     
                     // Días de pesca
                     _buildTextField(
-                      label: '🎣 Días de pesca',
+                      label: '🎣 Días de pesca *',
                       value: fishingDays,
                       onChanged: (value) => setState(() => fishingDays = value),
                       icon: Icons.settings,
@@ -3810,7 +3810,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                     
                     // Número de pescadores
                     _buildTextField(
-                      label: '👥 Número de pescadores',
+                      label: '👥 Número de pescadores *',
                       value: numberOfFishermen,
                       onChanged: (value) {
                         setState(() {
@@ -4089,7 +4089,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                     Text(
                       selectedSpecies.isNotEmpty 
                           ? selectedSpecies.join(', ')
-                          : '🐟 Especie que vienen a pescar',
+                          : '🐟 Especie que vienen a pescar *',
                       style: TextStyle(
                         color: selectedSpecies.isNotEmpty ? Color(0xFF1976D2) : Colors.grey,
                         fontWeight: selectedSpecies.isNotEmpty ? FontWeight.bold : FontWeight.normal,
@@ -4322,7 +4322,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
       children: [
         Expanded(
           child: _buildTextField(
-            label: '💰 Precio total (\$)',
+            label: '💰 Precio total (\$) *',
             value: totalPrice,
             onChanged: (value) {
               // Solo permitir números
@@ -4336,7 +4336,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
         const SizedBox(width: 12),
         Expanded(
           child: _buildTextField(
-            label: '💳 Seña (\$)',
+            label: '💳 Seña (\$) *',
             value: depositAmount,
             onChanged: (value) {
               // Solo permitir números
