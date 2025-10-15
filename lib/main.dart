@@ -759,7 +759,7 @@ class PantallaPrincipal extends StatelessWidget {
               image: DecorationImage(
                 image: AssetImage('assets/images/dorado_rio.jfif'),
                 fit: BoxFit.cover,
-                opacity: 0.35,
+                opacity: 0.6,
               ),
             ),
             child: Container(
@@ -769,8 +769,8 @@ class PantallaPrincipal extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.4),
                   ],
                 ),
               ),
