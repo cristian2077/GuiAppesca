@@ -440,14 +440,15 @@ class PantallaPrincipal extends StatelessWidget {
                             ],
                           ),
                         ),
-                      ),
-                    ],
                   ),
-                ),
+                ],
               ),
             ),
+            ),
           ),
-        );
+        ),
+      ),
+    );
   }
 
   Widget _buildClimaWidget(BuildContext context) {
@@ -888,34 +889,45 @@ class PantallaPrincipal extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
-                ],
+              image: DecorationImage(
+                image: NetworkImage(
+                  'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&q=80',
+                ),
+                fit: BoxFit.cover,
+                opacity: 0.4,
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Contenido centrado
-                  Expanded(
-                    child: Center(
-                      child: const Text(
-                        'Servicios de Hospedaje',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1, 1),
-                              blurRadius: 2,
-                              color: Colors.black54,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.4),
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Contenido centrado
+                    Expanded(
+                      child: Center(
+                        child: const Text(
+                          'Servicios de Hospedaje',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(1, 1),
+                                blurRadius: 3,
+                                color: Colors.black87,
                             ),
                           ],
                         ),
