@@ -1863,12 +1863,14 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
 🎣 CONTRATACIÓN DE PESCA
 
 📅 Fecha: ${DateFormat('dd/MM/yyyy').format(booking.date)}
+👤 Cliente: ${booking.clientName}
+📞 Teléfono: ${booking.clientPhone}
+📍 Lugar: ${booking.clientLocation}
 👥 Pescadores: ${booking.numberOfFishermen}
-📍 Lugar: ${booking.location}
 🐟 Especies: ${booking.targetSpecies.join(', ')}
 💰 Precio Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}
 💳 Estado de Pago: ${booking.paymentStatus.displayName}
-📝 Notas: ${booking.notes}
+📝 Notas: ${booking.notes ?? 'Sin notas'}
 
 --- GuiAppesca ---
 ''';
@@ -1882,7 +1884,7 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
         return Colors.orange;
       case PaymentStatus.partial:
         return Colors.blue;
-      case PaymentStatus.paid:
+      case PaymentStatus.completed:
         return Colors.green;
     }
   }
@@ -2039,16 +2041,16 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
                                 ),
                                 const SizedBox(height: 12),
                                 _buildInfoRow(Icons.people, '${booking.numberOfFishermen} pescadores'),
-                                _buildInfoRow(Icons.location_on, booking.location),
+                                _buildInfoRow(Icons.location_on, booking.clientLocation),
                                 _buildInfoRow(Icons.set_meal, booking.targetSpecies.join(', ')),
                                 _buildInfoRow(
                                   Icons.attach_money,
                                   '\$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}',
                                   color: Colors.green,
                                 ),
-                                if (booking.notes.isNotEmpty) ...[
+                                if (booking.notes != null && booking.notes!.isNotEmpty) ...[
                                   const SizedBox(height: 8),
-                                  _buildInfoRow(Icons.note, booking.notes),
+                                  _buildInfoRow(Icons.note, booking.notes!),
                                 ],
                                 const SizedBox(height: 12),
                                 Row(
@@ -2434,7 +2436,7 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                                       builder: (context) => PantallaListaContrataciones(),
                                     ),
                                   ).then((_) {
-                                    _cargarBookings();
+                                    _loadBookings();
                                   });
                                 },
                                 borderRadius: BorderRadius.circular(8),
