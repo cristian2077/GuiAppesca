@@ -50,8 +50,155 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class PantallaPrincipal extends StatelessWidget {
+class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
+
+  @override
+  State<PantallaPrincipal> createState() => _PantallaPrincipalState();
+}
+
+class _PantallaPrincipalState extends State<PantallaPrincipal> {
+  // Variables para el clima
+  bool _climaCargando = true;
+  String _climaUbicacion = 'Obteniendo ubicación...';
+  double _climaTemp = 0;
+  String _climaEstado = 'Cargando...';
+  IconData _climaIcono = Icons.wb_sunny;
+  int _climaHumedad = 0;
+  double _climaViento = 0;
+  String _climaError = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarClima();
+  }
+
+  Future<void> _cargarClima() async {
+    try {
+      setState(() {
+        _climaCargando = true;
+        _climaError = '';
+      });
+
+      // Verificar si el servicio de ubicación está habilitado
+      bool servicioHabilitado = await Geolocator.isLocationServiceEnabled();
+      if (!servicioHabilitado) {
+        setState(() {
+          _climaError = 'Servicio de ubicación desactivado';
+          _climaCargando = false;
+        });
+        return;
+      }
+
+      // Verificar permisos de ubicación
+      LocationPermission permiso = await Geolocator.checkPermission();
+      
+      if (permiso == LocationPermission.denied) {
+        permiso = await Geolocator.requestPermission();
+        if (permiso == LocationPermission.denied) {
+          setState(() {
+            _climaError = 'Permiso denegado';
+            _climaCargando = false;
+          });
+          return;
+        }
+      }
+      
+      if (permiso == LocationPermission.deniedForever) {
+        setState(() {
+          _climaError = 'Permiso denegado permanentemente';
+          _climaCargando = false;
+        });
+        return;
+      }
+
+      // Obtener posición actual con timeout
+      Position posicion = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () async {
+          Position? lastPosition = await Geolocator.getLastKnownPosition();
+          if (lastPosition != null) {
+            return lastPosition;
+          }
+          throw Exception('No se pudo obtener la ubicación');
+        },
+      );
+
+      // Obtener nombre de la ubicación
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        posicion.latitude,
+        posicion.longitude,
+      );
+      
+      String ciudad = placemarks.first.locality ?? 'Ubicación actual';
+      String provincia = placemarks.first.administrativeArea ?? '';
+
+      // Obtener datos del clima de Open-Meteo
+      final url = Uri.parse(
+        'https://api.open-meteo.com/v1/forecast?latitude=${posicion.latitude}&longitude=${posicion.longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto'
+      );
+      
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final current = data['current'];
+        
+        double temp = current['temperature_2m']?.toDouble() ?? 0;
+        int humedad = current['relative_humidity_2m']?.toInt() ?? 0;
+        double viento = current['wind_speed_10m']?.toDouble() ?? 0;
+        int weatherCode = current['weather_code'] ?? 0;
+        
+        // Interpretar el código del clima
+        String estado;
+        IconData icono;
+        
+        if (weatherCode == 0) {
+          estado = 'Despejado';
+          icono = Icons.wb_sunny;
+        } else if (weatherCode >= 1 && weatherCode <= 3) {
+          estado = 'Parcialmente nublado';
+          icono = Icons.wb_cloudy;
+        } else if (weatherCode >= 45 && weatherCode <= 48) {
+          estado = 'Niebla';
+          icono = Icons.cloud;
+        } else if (weatherCode >= 51 && weatherCode <= 67) {
+          estado = 'Lluvia';
+          icono = Icons.water_drop;
+        } else if (weatherCode >= 71 && weatherCode <= 77) {
+          estado = 'Nieve';
+          icono = Icons.ac_unit;
+        } else if (weatherCode >= 80 && weatherCode <= 99) {
+          estado = 'Tormenta';
+          icono = Icons.thunderstorm;
+        } else {
+          estado = 'Nublado';
+          icono = Icons.cloud;
+        }
+        
+        setState(() {
+          _climaUbicacion = '$ciudad, $provincia';
+          _climaTemp = temp;
+          _climaEstado = estado;
+          _climaIcono = icono;
+          _climaHumedad = humedad;
+          _climaViento = viento;
+          _climaCargando = false;
+        });
+      } else {
+        throw Exception('Error al obtener datos del clima');
+      }
+    } catch (e) {
+      setState(() {
+        _climaError = 'Error al cargar clima';
+        _climaCargando = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -456,224 +603,281 @@ class PantallaPrincipal extends StatelessWidget {
 
   Widget _buildClimaWidget(BuildContext context) {
     return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PantallaClima()),
-            );
-          },
-          child: Transform.scale(
-            scale: 1.0,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: 160,
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF87CEEB), // Azul cielo
-                    Color(0xFF98D8E8), // Azul claro
-                    Color(0xFF87CEEB), // Azul cielo
-                    Color(0xFF4682B4), // Azul acero
-                  ],
-                  stops: [0.0, 0.3, 0.7, 1.0],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 25,
-                    offset: const Offset(0, 12),
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(-4, -4),
-                  ),
-                  BoxShadow(
-                    color: Color(0xFF87CEEB).withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                  BoxShadow(
-                    color: Color(0xFF87CEEB).withOpacity(0.2),
-                    blurRadius: 35,
-                    offset: const Offset(0, 15),
-                  ),
-                ],
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaClima()),
+        );
+      },
+      child: Transform.scale(
+        scale: 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 160,
+          height: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF87CEEB), // Azul cielo
+                Color(0xFF98D8E8), // Azul claro
+                Color(0xFF87CEEB), // Azul cielo
+                Color(0xFF4682B4), // Azul acero
+              ],
+              stops: [0.0, 0.3, 0.7, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 25,
+                offset: const Offset(0, 12),
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Header con título
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.5),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.white.withOpacity(0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.wb_sunny,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Expanded(
-                            child: Text(
-                              'Clima',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(0.5, 0.5),
-                                    blurRadius: 1,
-                                    color: Colors.black45,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+              BoxShadow(
+                color: Colors.white.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(-4, -4),
+              ),
+              BoxShadow(
+                color: Color(0xFF87CEEB).withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Color(0xFF87CEEB).withOpacity(0.2),
+                blurRadius: 35,
+                offset: const Offset(0, 15),
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: _climaCargando
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
                       ),
-                      const SizedBox(height: 10),
-                      
-                      // Temperatura y datos del clima
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Temperatura actual
-                          ShaderMask(
-                            shaderCallback: (bounds) => LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.white,
-                                Colors.yellow.withOpacity(0.8),
-                                Colors.orange.withOpacity(0.6),
-                              ],
-                            ).createShader(bounds),
-                            child: const Text(
-                              '28°C',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(1, 1),
-                                    blurRadius: 2,
-                                    color: Colors.black54,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          
-                          // Humedad
-                          Column(
+                    )
+                  : _climaError.isNotEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(
-                                Icons.water_drop,
-                                color: Colors.white,
-                                size: 10,
+                                Icons.error_outline,
+                                color: Colors.white70,
+                                size: 24,
                               ),
-                              const Text(
-                                '65%',
-                                style: TextStyle(
-                                  fontSize: 7,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(0.5, 0.5),
-                                      blurRadius: 1,
-                                      color: Colors.black45,
-                                    ),
-                                  ],
+                              const SizedBox(height: 4),
+                              Text(
+                                _climaError,
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.white70,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 6),
+                              ElevatedButton(
+                                onPressed: _cargarClima,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(0.3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  minimumSize: Size.zero,
+                                ),
+                                child: const Text(
+                                  'Reintentar',
+                                  style: TextStyle(fontSize: 8, color: Colors.white),
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      
-                      // Indicador de toque
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.4),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Row(
+                        )
+                      : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.touch_app,
-                              color: Colors.white,
-                              size: 10,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Toca para ver pronóstico',
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(0.5, 0.5),
-                                    blurRadius: 1,
-                                    color: Colors.black45,
+                            // Ubicación
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    _climaUbicacion,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(0.5, 0.5),
+                                          blurRadius: 1,
+                                          color: Colors.black45,
+                                        ),
+                                      ],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            
+                            // Temperatura y estado
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Temperatura
+                                ShaderMask(
+                                  shaderCallback: (bounds) => LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.white,
+                                      Colors.yellow.withOpacity(0.9),
+                                      Colors.orange.withOpacity(0.7),
+                                    ],
+                                  ).createShader(bounds),
+                                  child: Text(
+                                    '${_climaTemp.round()}°',
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      height: 1.0,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(1, 1),
+                                          blurRadius: 3,
+                                          color: Colors.black54,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                
+                                // Icono y estado
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _climaIcono,
+                                      color: Colors.white,
+                                      size: 20,
+                                      shadows: const [
+                                        Shadow(
+                                          offset: Offset(1, 1),
+                                          blurRadius: 2,
+                                          color: Colors.black45,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _climaEstado,
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                            offset: Offset(0.5, 0.5),
+                                            blurRadius: 1,
+                                            color: Colors.black45,
+                                          ),
+                                        ],
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            
+                            // Humedad y viento
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                // Humedad
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.water_drop,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '$_climaHumedad%',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                            offset: Offset(0.5, 0.5),
+                                            blurRadius: 1,
+                                            color: Colors.black45,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Viento
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.air,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '${_climaViento.round()} km/h',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                            offset: Offset(0.5, 0.5),
+                                            blurRadius: 1,
+                                            color: Colors.black45,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
-        );
+        ),
+      ),
+    );
   }
 
   Widget _buildServiciosGuiaWidget(BuildContext context) {
