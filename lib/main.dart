@@ -363,7 +363,7 @@ class PantallaPrincipal extends StatelessWidget {
                     children: [
                       // Icono decorativo principal
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.25),
                           borderRadius: BorderRadius.circular(10),
@@ -379,10 +379,14 @@ class PantallaPrincipal extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.calendar_today,
-                          color: Colors.white,
-                          size: 20,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.asset(
+                            'assets/images/app_icon.png',
+                            width: 28,
+                            height: 28,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
