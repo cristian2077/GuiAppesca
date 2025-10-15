@@ -3329,25 +3329,76 @@ class PantallaEditarContratacion extends StatefulWidget {
 
 class _PantallaEditarContratacionState extends State<PantallaEditarContratacion> {
   // Estados para el formulario (inicializados con los datos del booking)
-  late DateTime selectedDate;
+  DateTime? _selectedDate;
+  DateTime get selectedDate => _selectedDate ?? widget.booking.date;
+  set selectedDate(DateTime value) => _selectedDate = value;
+  
   bool hasSelectedDate = true;
-  late String clientName;
-  late String clientPhone;
-  late String clientLocation;
-  late String numberOfFishermen;
+  
+  String? _clientName;
+  String get clientName => _clientName ?? widget.booking.clientName;
+  set clientName(String value) => _clientName = value;
+  
+  String? _clientPhone;
+  String get clientPhone => _clientPhone ?? widget.booking.clientPhone;
+  set clientPhone(String value) => _clientPhone = value;
+  
+  String? _clientLocation;
+  String get clientLocation => _clientLocation ?? widget.booking.clientLocation;
+  set clientLocation(String value) => _clientLocation = value;
+  
+  String? _numberOfFishermen;
+  String get numberOfFishermen => _numberOfFishermen ?? widget.booking.numberOfFishermen.toString();
+  set numberOfFishermen(String value) => _numberOfFishermen = value;
+  
   String targetSpecies = '';
-  late Set<String> selectedSpecies;
-  late FishingMode selectedFishingMode;
+  
+  Set<String>? _selectedSpecies;
+  Set<String> get selectedSpecies => _selectedSpecies ?? widget.booking.targetSpecies.toSet();
+  set selectedSpecies(Set<String> value) => _selectedSpecies = value;
+  
+  FishingMode? _selectedFishingMode;
+  FishingMode get selectedFishingMode => _selectedFishingMode ?? widget.booking.fishingMode;
+  set selectedFishingMode(FishingMode value) => _selectedFishingMode = value;
+  
   Set<FishingMode> selectedFishingModes = {};
-  late List<String> additionalBoats;
-  late bool includesBait;
-  late bool equipmentRental;
-  late bool includesAccommodation;
-  late String fishingDays;
-  late String totalPrice;
-  late String depositAmount;
-  late String notes;
-  late PaymentStatus paymentStatus;
+  
+  List<String>? _additionalBoats;
+  List<String> get additionalBoats => _additionalBoats ?? List<String>.from(widget.booking.additionalBoats);
+  set additionalBoats(List<String> value) => _additionalBoats = value;
+  
+  bool? _includesBait;
+  bool get includesBait => _includesBait ?? widget.booking.includesBait;
+  set includesBait(bool value) => _includesBait = value;
+  
+  bool? _equipmentRental;
+  bool get equipmentRental => _equipmentRental ?? widget.booking.equipmentRental;
+  set equipmentRental(bool value) => _equipmentRental = value;
+  
+  bool? _includesAccommodation;
+  bool get includesAccommodation => _includesAccommodation ?? widget.booking.includesAccommodation;
+  set includesAccommodation(bool value) => _includesAccommodation = value;
+  
+  String? _fishingDays;
+  String get fishingDays => _fishingDays ?? widget.booking.fishingDays.toString();
+  set fishingDays(String value) => _fishingDays = value;
+  
+  String? _totalPrice;
+  String get totalPrice => _totalPrice ?? widget.booking.totalPrice.toString();
+  set totalPrice(String value) => _totalPrice = value;
+  
+  String? _depositAmount;
+  String get depositAmount => _depositAmount ?? widget.booking.depositAmount.toString();
+  set depositAmount(String value) => _depositAmount = value;
+  
+  String? _notes;
+  String get notes => _notes ?? (widget.booking.notes ?? '');
+  set notes(String value) => _notes = value;
+  
+  PaymentStatus? _paymentStatus;
+  PaymentStatus get paymentStatus => _paymentStatus ?? widget.booking.paymentStatus;
+  set paymentStatus(PaymentStatus value) => _paymentStatus = value;
+  
   ServiceDetails serviceDetails = ServiceDetails();
   
   bool showSpeciesDropdown = false;
@@ -3359,23 +3410,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
   @override
   void initState() {
     super.initState();
-    // Inicializar con los datos del booking existente
-    selectedDate = widget.booking.date;
-    clientName = widget.booking.clientName;
-    clientPhone = widget.booking.clientPhone;
-    clientLocation = widget.booking.clientLocation;
-    numberOfFishermen = widget.booking.numberOfFishermen.toString();
-    selectedSpecies = widget.booking.targetSpecies.toSet();
-    selectedFishingMode = widget.booking.fishingMode;
-    additionalBoats = List<String>.from(widget.booking.additionalBoats);
-    includesBait = widget.booking.includesBait;
-    equipmentRental = widget.booking.equipmentRental;
-    includesAccommodation = widget.booking.includesAccommodation;
-    fishingDays = widget.booking.fishingDays.toString();
-    totalPrice = widget.booking.totalPrice.toString();
-    depositAmount = widget.booking.depositAmount.toString();
-    notes = widget.booking.notes ?? '';
-    paymentStatus = widget.booking.paymentStatus;
+    // Las variables ya están inicializadas con los valores del booking a través de los getters
   }
 
   @override
