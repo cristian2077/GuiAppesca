@@ -517,7 +517,7 @@ class PantallaPrincipal extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Header con localización
+                      // Header con título
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -539,7 +539,7 @@ class PantallaPrincipal extends StatelessWidget {
                               ],
                             ),
                             child: const Icon(
-                              Icons.location_on,
+                              Icons.wb_sunny,
                               color: Colors.white,
                               size: 12,
                             ),
@@ -547,9 +547,9 @@ class PantallaPrincipal extends StatelessWidget {
                           const SizedBox(width: 6),
                           const Expanded(
                             child: Text(
-                              'Paraná, ER',
+                              'Clima',
                               style: TextStyle(
-                                fontSize: 8,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                                 shadows: [
@@ -625,78 +625,47 @@ class PantallaPrincipal extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       
-                      // Estado del clima y viento
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Estado del clima
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.4),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.wb_sunny,
-                                  color: Colors.white,
-                                  size: 8,
-                                ),
-                                SizedBox(width: 3),
-                                Text(
-                                  'Soleado',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 7,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 0.5),
-                                        blurRadius: 1,
-                                        color: Colors.black26,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                      // Indicador de toque
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.4),
+                            width: 1,
                           ),
-                          
-                          // Viento
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.air,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.touch_app,
+                              color: Colors.white,
+                              size: 10,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Toca para ver pronóstico',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                                size: 8,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(0.5, 0.5),
+                                    blurRadius: 1,
+                                    color: Colors.black45,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 3),
-                              const Text(
-                                '12 km/h',
-                                style: TextStyle(
-                                  fontSize: 7,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(0.5, 0.5),
-                                      blurRadius: 1,
-                                      color: Colors.black45,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
