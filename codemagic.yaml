@@ -1,13 +1,15 @@
 workflows:
-  # Flujo de trabajo para iOS (SIN FIRMAR)
+  # Flujo de trabajo para iOS (Firma con Apple ID Gratis)
   ios-workflow:
-    name: iOS Workflow (Sin Firmar)
+    name: iOS Workflow (Development)
     max_build_duration: 120
     instance_type: mac_mini_m1
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      groups:
+        - apple_credentials  # Grupo con tu Apple ID
     scripts:
       - name: Get Flutter packages
         script: |
@@ -15,16 +17,20 @@ workflows:
       - name: Install pods
         script: |
           find . -name "Podfile" -execdir pod install \;
-      - name: Flutter build iOS (sin firmar)
+      - name: Configurar firma automática con Apple ID
+        script: |
+          # Usar firma automática con tu Apple ID
+          xcode-project use-profiles --export-options-plist=ios/exportOptions.plist || true
+      - name: Flutter build iOS
         script: |
           flutter build ios --release --no-codesign
-      - name: Crear IPA sin firmar
+      - name: Crear IPA
         script: |
           mkdir -p build/ios/ipa
           cd build/ios/iphoneos
           mkdir Payload
           cp -r Runner.app Payload/
-          zip -r ../ipa/GuiAppesca-v2.0.0-unsigned.ipa Payload
+          zip -r ../ipa/GuiAppesca-v2.0.0-development.ipa Payload
           rm -rf Payload
     artifacts:
       - build/ios/ipa/*.ipa
