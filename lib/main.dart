@@ -5413,15 +5413,25 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
                     backgroundColor: Colors.white,
                     child: widget.guia.logoUrl != null && widget.guia.logoUrl!.isNotEmpty
                         ? ClipOval(
-                            child: Image.network(
-                              widget.guia.logoUrl!,
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(Icons.person, size: 60, color: Color(0xFF4CAF50));
-                              },
-                            ),
+                            child: widget.guia.logoUrl!.startsWith('http')
+                                ? Image.network(
+                                    widget.guia.logoUrl!,
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(Icons.person, size: 60, color: Color(0xFF4CAF50));
+                                    },
+                                  )
+                                : Image.file(
+                                    File(widget.guia.logoUrl!),
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(Icons.person, size: 60, color: Color(0xFF4CAF50));
+                                    },
+                                  ),
                           )
                         : const Icon(Icons.person, size: 60, color: Color(0xFF4CAF50)),
                   ),
