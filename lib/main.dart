@@ -304,21 +304,7 @@ class PantallaPrincipal extends StatelessWidget {
   }
 
   Widget _buildAgendaGuia(BuildContext context) {
-    return FutureBuilder<List<Booking>>(
-      future: BookingStorage.loadBookings(),
-      builder: (context, snapshot) {
-        final bookings = snapshot.data ?? [];
-        final now = DateTime.now();
-        
-        // Filtrar contrataciones futuras y ordenar por fecha
-        final futureBookings = bookings.where((b) {
-          return b.date.isAfter(now.subtract(const Duration(days: 1)));
-        }).toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
-        
-        final nextBooking = futureBookings.isNotEmpty ? futureBookings.first : null;
-        
-        return GestureDetector(
+    return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
@@ -399,13 +385,13 @@ class PantallaPrincipal extends StatelessWidget {
                           size: 20,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       
                       // Título
                       const Text(
-                        'Próxima Contratación',
+                        'Agenda del Guía',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           shadows: [
@@ -417,68 +403,44 @@ class PantallaPrincipal extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       
-                      // Próxima contratación o mensaje
-                      if (nextBooking != null) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
+                      // Fecha actual
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
                           ),
-                          child: Column(
-                            children: [
-                              Text(
-                                nextBooking.clientName,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                DateFormat('dd/MM/yyyy').format(nextBooking.date),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 2,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Hoy - ${DateFormat('d \'de\' MMMM', 'es').format(DateTime.now())}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 8,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 0.5),
+                                blurRadius: 1,
+                                color: Colors.black26,
                               ),
                             ],
                           ),
                         ),
-                      ] else ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Text(
-                            'Sin contrataciones',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -486,8 +448,6 @@ class PantallaPrincipal extends StatelessWidget {
             ),
           ),
         );
-      },
-    );
   }
 
   Widget _buildClimaWidget(BuildContext context) {
@@ -1851,6 +1811,7 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
   // Lista de contrataciones guardadas
   List<Booking> bookings = [];
   bool isLoading = true;
+  bool mostrarTodas = false; // Toggle para mostrar todas o solo la próxima
 
   @override
   void initState() {
@@ -2137,13 +2098,34 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Contrataciones Guardadas',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1976D2),
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                mostrarTodas ? 'Todas las Contrataciones' : 'Próxima Contratación',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1976D2),
+                                ),
+                              ),
+                              if (bookings.length > 1)
+                                TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      mostrarTodas = !mostrarTodas;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    mostrarTodas ? Icons.visibility_off : Icons.list,
+                                    size: 18,
+                                  ),
+                                  label: Text(mostrarTodas ? 'Ver Próxima' : 'Ver Todas'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF1976D2),
+                                  ),
+                                ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           
@@ -2201,13 +2183,27 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                             )
                           else
                             Expanded(
-                              child: ListView.builder(
-                                itemCount: bookings.length,
-                                itemBuilder: (context, index) {
-                                  final booking = bookings[index];
-                                  return _buildBookingCard(booking, index);
-                                },
-                              ),
+                              child: () {
+                                // Filtrar contrataciones a mostrar
+                                final now = DateTime.now();
+                                final futureBookings = bookings.where((b) {
+                                  return b.date.isAfter(now.subtract(const Duration(days: 1)));
+                                }).toList()
+                                  ..sort((a, b) => a.date.compareTo(b.date));
+                                
+                                final bookingsToShow = mostrarTodas 
+                                    ? bookings 
+                                    : (futureBookings.isNotEmpty ? [futureBookings.first] : []);
+                                
+                                return ListView.builder(
+                                  itemCount: bookingsToShow.length,
+                                  itemBuilder: (context, index) {
+                                    final booking = bookingsToShow[index];
+                                    final originalIndex = bookings.indexOf(booking);
+                                    return _buildBookingCard(booking, originalIndex);
+                                  },
+                                );
+                              }(),
                             ),
                         ],
                       ),
