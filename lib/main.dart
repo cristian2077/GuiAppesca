@@ -1945,157 +1945,145 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
                     itemCount: bookings.length,
                     itemBuilder: (context, index) {
                       final booking = bookings[index];
-                      final isPast = booking.date.isBefore(
-                        DateTime.now().subtract(const Duration(days: 1)),
-                      );
                       
                       return Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        elevation: 2,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isPast 
-                                  ? Colors.grey.withOpacity(0.3)
-                                  : const Color(0xFF1976D2),
-                              width: 2,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              // Icono de calendario
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1976D2).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFF1976D2),
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              
+                              // Información principal
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.calendar_today,
-                                                color: isPast ? Colors.grey : const Color(0xFF1976D2),
-                                                size: 20,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                DateFormat('dd/MM/yyyy').format(booking.date),
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isPast ? Colors.grey : Colors.black87,
-                                                ),
-                                              ),
-                                              if (isPast) ...[
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 2,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey,
-                                                    borderRadius: BorderRadius.circular(8),
-                                                  ),
-                                                  child: const Text(
-                                                    'Pasada',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: _getPaymentStatusColor(booking.paymentStatus),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              booking.paymentStatus.displayName,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                    Text(
+                                      booking.clientName,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF333333),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat('dd/MM/yyyy').format(booking.date),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF666666),
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
-                                _buildInfoRow(Icons.people, '${booking.numberOfFishermen} pescadores'),
-                                _buildInfoRow(Icons.location_on, booking.clientLocation),
-                                _buildInfoRow(Icons.set_meal, booking.targetSpecies.join(', ')),
-                                _buildInfoRow(
-                                  Icons.attach_money,
-                                  '\$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}',
-                                  color: Colors.green,
-                                ),
-                                if (booking.notes != null && booking.notes!.isNotEmpty) ...[
+                              ),
+                              
+                              // Estado de pago y botones de acción
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: _getPaymentStatusColor(booking.paymentStatus),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      booking.paymentStatus.displayName,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
-                                  _buildInfoRow(Icons.note, booking.notes!),
-                                ],
-                                const SizedBox(height: 12),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    IconButton(
-                                      onPressed: () => _compartirBooking(booking),
-                                      icon: const Icon(Icons.share, color: Color(0xFF1976D2)),
-                                      tooltip: 'Compartir',
-                                    ),
-                                    IconButton(
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text('Eliminar Contratación'),
-                                            content: const Text(
-                                              '¿Estás seguro de que deseas eliminar esta contratación?',
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                child: const Text('Cancelar'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  _eliminarBooking(index);
-                                                },
-                                                child: const Text(
-                                                  'Eliminar',
-                                                  style: TextStyle(color: Colors.red),
-                                                ),
-                                              ),
-                                            ],
+                                  Row(
+                                    children: [
+                                      // Botón Compartir
+                                      GestureDetector(
+                                        onTap: () => _compartirBooking(booking),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF4CAF50),
+                                            borderRadius: BorderRadius.circular(6),
                                           ),
-                                        );
-                                      },
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      tooltip: 'Eliminar',
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                          child: const Icon(
+                                            Icons.share,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      // Botón Eliminar
+                                      GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text('Eliminar Contratación'),
+                                              content: const Text(
+                                                '¿Estás seguro de que deseas eliminar esta contratación?',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  child: const Text('Cancelar'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    _eliminarBooking(index);
+                                                  },
+                                                  child: const Text(
+                                                    'Eliminar',
+                                                    style: TextStyle(color: Colors.red),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF44336),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Icon(
+                                            Icons.delete,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -2105,27 +2093,6 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color ?? Colors.grey[600]),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 14,
-                color: color ?? Colors.black87,
-                fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class PantallaAgendaDetalle extends StatefulWidget {
