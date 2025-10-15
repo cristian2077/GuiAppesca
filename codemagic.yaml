@@ -1,48 +1,38 @@
 workflows:
-  # Flujo de trabajo para iOS
+  # Flujo de trabajo para iOS (SIN FIRMAR)
   ios-workflow:
-    name: iOS Workflow
+    name: iOS Workflow (Sin Firmar)
     max_build_duration: 120
     instance_type: mac_mini_m1
-    integrations:
-      app_store_connect: codemagic
     environment:
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: com.example.guiappesca
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Set up keychain to be used for code signing
-        script: |
-          keychain initialize
-      - name: Fetch signing files
-        script: |
-          app-store-connect fetch-signing-files $(xcode-project detect-bundle-id) \
-            --type IOS_APP_DEVELOPMENT \
-            --create
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles
       - name: Get Flutter packages
         script: |
           flutter packages pub get
       - name: Install pods
         script: |
           find . -name "Podfile" -execdir pod install \;
-      - name: Flutter build ipa (development)
+      - name: Flutter build iOS (sin firmar)
         script: |
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+          flutter build ios --release --no-codesign
+      - name: Crear IPA sin firmar
+        script: |
+          mkdir -p build/ios/ipa
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload/
+          zip -r ../ipa/GuiAppesca-v2.0.0-unsigned.ipa Payload
+          rm -rf Payload
     artifacts:
       - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
       - flutter_drive.log
     publishing:
       email:
         recipients:
-          - carolina@email.com  # Cambia esto por tu email
+          - carolina@email.com
         notify:
           success: true
           failure: true
