@@ -3428,7 +3428,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 20),
                     
                     _buildTextField(
-                      label: '👤 Nombre del cliente',
+                      label: '👤 Nombre del cliente *',
                       value: clientName,
                       onChanged: (value) => setState(() => clientName = value),
                       icon: Icons.person,
@@ -3436,7 +3436,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 16),
                     
                     _buildTextField(
-                      label: '📞 Teléfono',
+                      label: '📞 Teléfono *',
                       value: clientPhone,
                       onChanged: (value) => setState(() => clientPhone = value),
                       icon: Icons.phone,
@@ -3445,7 +3445,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 16),
                     
                     _buildTextField(
-                      label: '📍 Localidad del cliente',
+                      label: '📍 Localidad del cliente *',
                       value: clientLocation,
                       onChanged: (value) => setState(() => clientLocation = value),
                       icon: Icons.location_on,
@@ -3453,7 +3453,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 16),
                     
                     _buildTextField(
-                      label: '🎣 Días de pesca',
+                      label: '🎣 Días de pesca *',
                       value: fishingDays,
                       onChanged: (value) => setState(() => fishingDays = value),
                       icon: Icons.settings,
@@ -3462,7 +3462,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 16),
                     
                     _buildTextField(
-                      label: '👥 Número de pescadores',
+                      label: '👥 Número de pescadores *',
                       value: numberOfFishermen,
                       onChanged: (value) => setState(() => numberOfFishermen = value),
                       icon: Icons.person,
@@ -3471,7 +3471,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 16),
                     
                     _buildTextField(
-                      label: '💰 Precio total',
+                      label: '💰 Precio total *',
                       value: totalPrice,
                       onChanged: (value) => setState(() => totalPrice = value),
                       icon: Icons.attach_money,
@@ -3480,7 +3480,7 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     const SizedBox(height: 16),
                     
                     _buildTextField(
-                      label: '💳 Seña/Anticipo',
+                      label: '💳 Seña/Anticipo *',
                       value: depositAmount,
                       onChanged: (value) => setState(() => depositAmount = value),
                       icon: Icons.payment,
@@ -3613,11 +3613,25 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
   }
 
   void _saveChanges() {
-    if (clientName.isEmpty || clientPhone.isEmpty) {
+    // Validar campos obligatorios
+    List<String> camposFaltantes = [];
+    
+    if (!hasSelectedDate) camposFaltantes.add('Fecha');
+    if (clientName.isEmpty) camposFaltantes.add('Nombre del cliente');
+    if (clientPhone.isEmpty) camposFaltantes.add('Teléfono');
+    if (clientLocation.isEmpty) camposFaltantes.add('Localidad del cliente');
+    if (fishingDays.isEmpty) camposFaltantes.add('Días de pesca');
+    if (numberOfFishermen.isEmpty) camposFaltantes.add('Número de pescadores');
+    if (totalPrice.isEmpty) camposFaltantes.add('Precio total');
+    if (depositAmount.isEmpty) camposFaltantes.add('Depósito/Seña');
+    if (selectedSpecies.isEmpty) camposFaltantes.add('Especies objetivo');
+    
+    if (camposFaltantes.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor completa los campos obligatorios'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: Text('Campos obligatorios faltantes:\n${camposFaltantes.join(', ')}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
         ),
       );
       return;
@@ -3883,7 +3897,7 @@ class _PantallaNuevaContratacionState extends State<PantallaNuevaContratacion> {
                 Text(
                   hasSelectedDate 
                       ? DateFormat('dd/MM/yyyy').format(selectedDate)
-                      : '📅 Fecha de la pesca',
+                      : '📅 Fecha de la pesca *',
                   style: TextStyle(
                     color: hasSelectedDate ? Color(0xFF1976D2) : Colors.grey,
                     fontWeight: hasSelectedDate ? FontWeight.bold : FontWeight.normal,
