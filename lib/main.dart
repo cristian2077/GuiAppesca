@@ -399,13 +399,13 @@ class PantallaPrincipal extends StatelessWidget {
                           size: 20,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       
                       // Título
                       const Text(
                         'Próxima Contratación',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           shadows: [
@@ -417,13 +417,13 @@ class PantallaPrincipal extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       
                       // Próxima contratación o mensaje
                       if (nextBooking != null) ...[
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(4),
@@ -445,6 +445,7 @@ class PantallaPrincipal extends StatelessWidget {
                                   fontSize: 10,
                                 ),
                               ),
+                              const SizedBox(height: 2),
                               Text(
                                 DateFormat('dd/MM/yyyy').format(nextBooking.date),
                                 textAlign: TextAlign.center,
@@ -459,7 +460,7 @@ class PantallaPrincipal extends StatelessWidget {
                       ] else ...[
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(4),
