@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'widgets/calendar_widget.dart';
 import 'screens/hospedaje_screen.dart';
+import 'screens/foto_completa_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -5729,48 +5730,62 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
     
     return Stack(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+        GestureDetector(
+          onTap: () {
+            // Abrir foto en pantalla completa
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PantallaFotoCompleta(
+                  fotoUrl: fotoUrl,
+                  isLocalFile: isLocalFile,
+                ),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: isLocalFile
-                ? Image.file(
-                    File(fotoUrl),
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                        ),
-                      );
-                    },
-                  )
-                : Image.network(
-                    fotoUrl,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                        ),
-                      );
-                    },
-                  ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: isLocalFile
+                  ? Image.file(
+                      File(fotoUrl),
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                          ),
+                        );
+                      },
+                    )
+                  : Image.network(
+                      fotoUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ),
         ),
         Positioned(
