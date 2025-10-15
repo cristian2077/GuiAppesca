@@ -758,10 +758,10 @@ class PantallaPrincipal extends StatelessWidget {
               borderRadius: BorderRadius.circular(25),
               image: DecorationImage(
                 image: NetworkImage(
-                  'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&q=80',
+                  'https://images.unsplash.com/photo-1582564286939-400a311013a2?w=500&q=80',
                 ),
                 fit: BoxFit.cover,
-                opacity: 0.3,
+                opacity: 0.35,
               ),
             ),
             child: Container(
