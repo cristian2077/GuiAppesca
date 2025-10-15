@@ -3981,26 +3981,8 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
     final depositAmountValue = double.tryParse(depositAmount) ?? 0.0;
     final remainingBalance = totalPriceValue - depositAmountValue;
 
-    // Calcular el estado de pago sin modificar directamente
-    PaymentStatus calculatedStatus;
-    if (depositAmountValue >= totalPriceValue && totalPriceValue > 0) {
-      calculatedStatus = PaymentStatus.completed;
-    } else if (depositAmountValue > 0) {
-      calculatedStatus = PaymentStatus.partial;
-    } else {
-      calculatedStatus = PaymentStatus.pending;
-    }
-
-    // Actualizar solo si cambió
-    if (paymentStatus != calculatedStatus) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            paymentStatus = calculatedStatus;
-          });
-        }
-      });
-    }
+    // Calcular el estado de pago
+    PaymentStatus displayStatus = paymentStatus;
 
     return Card(
       color: remainingBalance > 0 ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E8),
@@ -4030,15 +4012,15 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: calculatedStatus == PaymentStatus.completed
+                color: displayStatus == PaymentStatus.completed
                     ? Colors.green
-                    : calculatedStatus == PaymentStatus.partial
+                    : displayStatus == PaymentStatus.partial
                         ? Colors.blue
                         : Colors.orange,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                calculatedStatus.displayName,
+                displayStatus.displayName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
