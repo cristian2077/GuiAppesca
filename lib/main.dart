@@ -1082,17 +1082,38 @@ class _PantallaClimaState extends State<PantallaClima> {
 
   Future<void> _obtenerUbicacionYClima() async {
     try {
-    setState(() {
+      setState(() {
         _cargando = true;
         _error = '';
       });
 
-      // Solicitar permisos de ubicación
-      var permiso = await Permission.location.request();
-      
-      if (!permiso.isGranted) {
+      // Verificar si el servicio de ubicación está habilitado
+      bool servicioHabilitado = await Geolocator.isLocationServiceEnabled();
+      if (!servicioHabilitado) {
         setState(() {
-          _error = 'Se necesita permiso de ubicación para obtener el clima';
+          _error = 'Por favor activa el servicio de ubicación';
+          _cargando = false;
+        });
+        return;
+      }
+
+      // Verificar permisos de ubicación
+      LocationPermission permiso = await Geolocator.checkPermission();
+      
+      if (permiso == LocationPermission.denied) {
+        permiso = await Geolocator.requestPermission();
+        if (permiso == LocationPermission.denied) {
+          setState(() {
+            _error = 'Permiso de ubicación denegado';
+            _cargando = false;
+          });
+          return;
+        }
+      }
+      
+      if (permiso == LocationPermission.deniedForever) {
+        setState(() {
+          _error = 'Permiso de ubicación denegado permanentemente.\nPor favor habilítalo en configuración.';
           _cargando = false;
         });
         return;
@@ -1101,6 +1122,17 @@ class _PantallaClimaState extends State<PantallaClima> {
       // Obtener posición actual
       Position posicion = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () async {
+          // Si tarda mucho, usar última posición conocida
+          Position? lastPosition = await Geolocator.getLastKnownPosition();
+          if (lastPosition != null) {
+            return lastPosition;
+          }
+          throw Exception('No se pudo obtener la ubicación');
+        },
       );
 
       // Obtener nombre de la ubicación
@@ -1315,14 +1347,41 @@ class _PantallaClimaState extends State<PantallaClima> {
                                 ],
                               ),
                             ),
+                            if (_error.contains('permanentemente'))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await openAppSettings();
+                                  },
+                                  icon: const Icon(Icons.settings, size: 16),
+                                  label: const Text('Abrir Configuración', style: TextStyle(fontSize: 12)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: const Color(0xFF1976D2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.wb_sunny,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                      if (_error.isEmpty)
+                        const Icon(
+                          Icons.wb_sunny,
+                          color: Colors.white,
+                          size: 32,
+                        )
+                      else
+                        IconButton(
+                          onPressed: _obtenerUbicacionYClima,
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                          tooltip: 'Reintentar',
+                        ),
                     ],
                   ),
                 ),
