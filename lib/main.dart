@@ -5207,8 +5207,10 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
         facebook: widget.guia.facebook,
         instagram: widget.guia.instagram,
         whatsapp: widget.guia.whatsapp,
+        tiktok: widget.guia.tiktok,
         descripcion: widget.guia.descripcion,
         fotos: fotos,
+        creadorId: widget.guia.creadorId,
       );
       
       await GuiasStorage.updateGuia(widget.guiaIndex, guiaActualizado);
