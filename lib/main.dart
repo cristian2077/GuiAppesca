@@ -3427,6 +3427,10 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     ),
                     const SizedBox(height: 20),
                     
+                    // Fecha de la pesca
+                    _buildDateButton(),
+                    const SizedBox(height: 16),
+                    
                     _buildTextField(
                       label: '👤 Nombre del cliente *',
                       value: clientName,
@@ -3464,64 +3468,49 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
                     _buildTextField(
                       label: '👥 Número de pescadores *',
                       value: numberOfFishermen,
-                      onChanged: (value) => setState(() => numberOfFishermen = value),
+                      onChanged: (value) {
+                        setState(() {
+                          numberOfFishermen = value;
+                          // Calcular lanchas adicionales automáticamente
+                          final numFishermen = int.tryParse(value) ?? 0;
+                          final additionalBoatsCount = numFishermen >= 5
+                              ? ((numFishermen - 5) ~/ 3) + 1
+                              : 0;
+                          
+                          // Ajustar la lista de nombres de guías
+                          if (additionalBoatsCount > additionalBoats.length) {
+                            additionalBoats.addAll(
+                              List.filled(additionalBoatsCount - additionalBoats.length, ''),
+                            );
+                          } else if (additionalBoatsCount < additionalBoats.length) {
+                            additionalBoats = additionalBoats.take(additionalBoatsCount).toList();
+                          }
+                        });
+                      },
                       icon: Icons.person,
                       keyboardType: TextInputType.number,
                     ),
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
-                      label: '💰 Precio total *',
-                      value: totalPrice,
-                      onChanged: (value) => setState(() => totalPrice = value),
-                      icon: Icons.attach_money,
-                      keyboardType: TextInputType.number,
-                    ),
+                    // Especie objetivo
+                    _buildSpeciesSelector(),
                     const SizedBox(height: 16),
                     
-                    _buildTextField(
-                      label: '💳 Seña/Anticipo *',
-                      value: depositAmount,
-                      onChanged: (value) => setState(() => depositAmount = value),
-                      icon: Icons.payment,
-                      keyboardType: TextInputType.number,
-                    ),
+                    // Modalidad de pesca
+                    _buildFishingModeSelector(),
                     const SizedBox(height: 16),
                     
-                    // Estado de pago
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '💳 Estado del pago',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2196F3),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ...PaymentStatus.values.map((status) {
-                            return RadioListTile<PaymentStatus>(
-                              title: Text(status.displayName),
-                              value: status,
-                              groupValue: paymentStatus,
-                              onChanged: (value) {
-                                setState(() => paymentStatus = value!);
-                              },
-                              activeColor: const Color(0xFF2196F3),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    // Lanchas adicionales
+                    _buildAdditionalBoatsSection(),
+                    
+                    // Servicios incluidos
+                    _buildServicesSection(),
+                    
+                    // Precio total y seña
+                    _buildPriceSection(),
+                    
+                    // Saldo pendiente
+                    _buildBalanceSection(),
                     
                     _buildTextField(
                       label: '📝 Notas adicionales (opcional)',
@@ -3609,6 +3598,398 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
+    );
+  }
+
+  Widget _buildDateButton() {
+    return GestureDetector(
+      onTap: _showDatePicker,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.date_range, color: Color(0xFF1976D2)),
+                const SizedBox(width: 8),
+                Text(
+                  hasSelectedDate 
+                      ? DateFormat('dd/MM/yyyy').format(selectedDate)
+                      : '📅 Fecha de la pesca *',
+                  style: TextStyle(
+                    color: hasSelectedDate ? Color(0xFF1976D2) : Colors.grey,
+                    fontWeight: hasSelectedDate ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDatePicker() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        hasSelectedDate = true;
+      });
+    }
+  }
+
+  Widget _buildSpeciesSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => showSpeciesDropdown = !showSpeciesDropdown),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Color(0xFF1976D2)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        selectedSpecies.isNotEmpty 
+                            ? selectedSpecies.join(', ')
+                            : '🐟 Especie que vienen a pescar *',
+                        style: TextStyle(
+                          color: selectedSpecies.isNotEmpty ? Color(0xFF1976D2) : Colors.grey,
+                          fontWeight: selectedSpecies.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  showSpeciesDropdown ? Icons.keyboard_arrow_up : Icons.arrow_drop_down,
+                  color: Color(0xFF1976D2),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (showSpeciesDropdown)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                'Dorado',
+                'Surubí',
+                'Pacú',
+                'Boga',
+                'Sábalo',
+                'Armado',
+                'Manguruyú',
+                'Tararira',
+                'Pejerrey',
+                'Corvina',
+              ].map((species) {
+                final isSelected = selectedSpecies.contains(species);
+                return FilterChip(
+                  label: Text(species),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        selectedSpecies.add(species);
+                      } else {
+                        selectedSpecies.remove(species);
+                      }
+                    });
+                  },
+                  backgroundColor: Colors.white,
+                  selectedColor: const Color(0xFF1976D2).withOpacity(0.2),
+                  checkmarkColor: const Color(0xFF1976D2),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFishingModeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => showFishingModeDropdown = !showFishingModeDropdown),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.waves, color: Color(0xFF1976D2)),
+                    const SizedBox(width: 8),
+                    Text(
+                      selectedFishingMode.displayName,
+                      style: const TextStyle(
+                        color: Color(0xFF1976D2),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  showFishingModeDropdown ? Icons.keyboard_arrow_up : Icons.arrow_drop_down,
+                  color: Color(0xFF1976D2),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (showFishingModeDropdown)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: Column(
+              children: FishingMode.values.map((mode) {
+                return RadioListTile<FishingMode>(
+                  title: Text(mode.displayName),
+                  value: mode,
+                  groupValue: selectedFishingMode,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedFishingMode = value!;
+                      showFishingModeDropdown = false;
+                    });
+                  },
+                  activeColor: const Color(0xFF1976D2),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalBoatsSection() {
+    final numFishermen = int.tryParse(numberOfFishermen) ?? 0;
+    final additionalBoatsCount = numFishermen >= 5 ? ((numFishermen - 5) ~/ 3) + 1 : 0;
+    
+    if (additionalBoatsCount == 0) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFF2196F3)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '🚤 Lanchas adicionales: $additionalBoatsCount',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2196F3),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...List.generate(additionalBoatsCount, (index) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Nombre del guía ${index + 1}',
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        if (index < additionalBoats.length) {
+                          additionalBoats[index] = value;
+                        }
+                      });
+                    },
+                    controller: TextEditingController(
+                      text: index < additionalBoats.length ? additionalBoats[index] : '',
+                    )..selection = TextSelection.fromPosition(
+                      TextPosition(offset: (index < additionalBoats.length ? additionalBoats[index] : '').length),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServicesSection() {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        CheckboxListTile(
+          title: const Text('🪱 Incluye carnada'),
+          value: includesBait,
+          onChanged: (value) => setState(() => includesBait = value!),
+          activeColor: const Color(0xFF1976D2),
+        ),
+        CheckboxListTile(
+          title: const Text('🎣 Alquiler de equipo de pesca'),
+          value: equipmentRental,
+          onChanged: (value) => setState(() => equipmentRental = value!),
+          activeColor: const Color(0xFF1976D2),
+        ),
+        CheckboxListTile(
+          title: const Text('🏠 Incluye alojamiento'),
+          value: includesAccommodation,
+          onChanged: (value) => setState(() => includesAccommodation = value!),
+          activeColor: const Color(0xFF1976D2),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriceSection() {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                label: '💰 Precio total (\$) *',
+                value: totalPrice,
+                onChanged: (value) {
+                  final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+                  setState(() => totalPrice = cleanValue);
+                },
+                icon: Icons.star,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTextField(
+                label: '💳 Seña (\$) *',
+                value: depositAmount,
+                onChanged: (value) {
+                  final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+                  setState(() => depositAmount = cleanValue);
+                },
+                icon: Icons.star,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBalanceSection() {
+    final totalPriceValue = double.tryParse(totalPrice) ?? 0.0;
+    final depositAmountValue = double.tryParse(depositAmount) ?? 0.0;
+    final remainingBalance = totalPriceValue - depositAmountValue;
+
+    if (depositAmountValue >= totalPriceValue && totalPriceValue > 0) {
+      paymentStatus = PaymentStatus.completed;
+    } else if (depositAmountValue > 0) {
+      paymentStatus = PaymentStatus.partial;
+    } else {
+      paymentStatus = PaymentStatus.pending;
+    }
+
+    return Card(
+      color: remainingBalance > 0 ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E8),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Saldo pendiente:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '\$${NumberFormat('#,##0', 'es').format(remainingBalance)}',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: remainingBalance > 0 ? Colors.orange : Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: paymentStatus == PaymentStatus.completed
+                    ? Colors.green
+                    : paymentStatus == PaymentStatus.partial
+                        ? Colors.blue
+                        : Colors.orange,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                paymentStatus.displayName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
