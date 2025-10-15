@@ -757,9 +757,7 @@ class PantallaPrincipal extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
               image: DecorationImage(
-                image: NetworkImage(
-                  'https://images.unsplash.com/photo-1582564286939-400a311013a2?w=500&q=80',
-                ),
+                image: AssetImage('assets/images/dorado_rio.jfif'),
                 fit: BoxFit.cover,
                 opacity: 0.35,
               ),
