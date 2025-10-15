@@ -3710,25 +3710,21 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Color(0xFF1976D2)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        selectedSpecies.isNotEmpty 
-                            ? selectedSpecies.join(', ')
-                            : '🐟 Especie que vienen a pescar *',
-                        style: TextStyle(
-                          color: selectedSpecies.isNotEmpty ? Color(0xFF1976D2) : Colors.grey,
-                          fontWeight: selectedSpecies.isNotEmpty ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 16,
-                        ),
-                      ),
+                const Icon(Icons.star, color: Color(0xFF1976D2)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    selectedSpecies.isNotEmpty 
+                        ? selectedSpecies.join(', ')
+                        : '🐟 Especie que vienen a pescar *',
+                    style: TextStyle(
+                      color: selectedSpecies.isNotEmpty ? Color(0xFF1976D2) : Colors.grey,
+                      fontWeight: selectedSpecies.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 16,
                     ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 Icon(
                   showSpeciesDropdown ? Icons.keyboard_arrow_up : Icons.arrow_drop_down,
