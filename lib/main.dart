@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'widgets/calendar_widget.dart';
+import 'screens/hospedaje_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -283,8 +284,19 @@ class PantallaPrincipal extends StatelessWidget {
                       
                       const SizedBox(height: 20),
                       
-                      // Widget de servicios de guías
-                      _buildServiciosGuiaWidget(context),
+                      // Widgets de servicios en fila
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Widget de servicios de guías
+                          _buildServiciosGuiaWidget(context),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Widget de servicios de hospedaje
+                          _buildServiciosHospedajeWidget(context),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -798,6 +810,128 @@ class PantallaPrincipal extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.directions_boat,
+                      color: Colors.white,
+                      size: 32,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiciosHospedajeWidget(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaServiciosHospedaje()),
+        );
+      },
+      child: Transform.scale(
+        scale: 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 160,
+          height: 100,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1976D2), // Azul oscuro
+                Color(0xFF2196F3), // Azul medio
+                Color(0xFF64B5F6), // Azul claro
+                Color(0xFF1565C0), // Azul profundo
+              ],
+              stops: [0.0, 0.3, 0.7, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 25,
+                offset: const Offset(0, 12),
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(-4, -4),
+              ),
+              BoxShadow(
+                color: Color(0xFF2196F3).withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Color(0xFF2196F3).withOpacity(0.2),
+                blurRadius: 35,
+                offset: const Offset(0, 15),
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Contenido centrado
+                  Expanded(
+                    child: Center(
+                      child: const Text(
+                        'Servicios de Hospedaje',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                              color: Colors.black54,
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  
+                  // Icono principal
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.hotel,
                       color: Colors.white,
                       size: 32,
                       shadows: [
@@ -5651,3 +5785,4 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
     );
   }
 }
+
