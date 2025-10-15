@@ -1800,6 +1800,332 @@ class BookingStorage {
   }
 }
 
+// Pantalla para mostrar la lista completa de contrataciones
+class PantallaListaContrataciones extends StatefulWidget {
+  const PantallaListaContrataciones({super.key});
+
+  @override
+  State<PantallaListaContrataciones> createState() => _PantallaListaContratacionesState();
+}
+
+class _PantallaListaContratacionesState extends State<PantallaListaContrataciones> {
+  List<Booking> bookings = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarBookings();
+  }
+
+  Future<void> _cargarBookings() async {
+    setState(() => isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bookingsJson = prefs.getStringList('bookings') ?? [];
+      setState(() {
+        bookings = bookingsJson
+            .map((json) => Booking.fromJson(jsonDecode(json)))
+            .toList();
+        bookings.sort((a, b) => a.date.compareTo(b.date));
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando contrataciones: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _eliminarBooking(int index) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      bookings.removeAt(index);
+      final bookingsJson = bookings.map((b) => jsonEncode(b.toJson())).toList();
+      await prefs.setStringList('bookings', bookingsJson);
+      
+      setState(() {});
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Contratación eliminada'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error eliminando contratación: $e');
+    }
+  }
+
+  void _compartirBooking(Booking booking) {
+    final text = '''
+🎣 CONTRATACIÓN DE PESCA
+
+📅 Fecha: ${DateFormat('dd/MM/yyyy').format(booking.date)}
+👥 Pescadores: ${booking.numberOfFishermen}
+📍 Lugar: ${booking.location}
+🐟 Especies: ${booking.targetSpecies.join(', ')}
+💰 Precio Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}
+💳 Estado de Pago: ${booking.paymentStatus.displayName}
+📝 Notas: ${booking.notes}
+
+--- GuiAppesca ---
+''';
+    
+    Share.share(text);
+  }
+
+  Color _getPaymentStatusColor(PaymentStatus status) {
+    switch (status) {
+      case PaymentStatus.pending:
+        return Colors.orange;
+      case PaymentStatus.partial:
+        return Colors.blue;
+      case PaymentStatus.paid:
+        return Colors.green;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Todas las Contrataciones',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: const Color(0xFF1976D2),
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 4,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF64B5F6), Color(0xFF1976D2)],
+          ),
+        ),
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : bookings.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 64,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No hay contrataciones registradas',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: bookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = bookings[index];
+                      final isPast = booking.date.isBefore(
+                        DateTime.now().subtract(const Duration(days: 1)),
+                      );
+                      
+                      return Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isPast 
+                                  ? Colors.grey.withOpacity(0.3)
+                                  : const Color(0xFF1976D2),
+                              width: 2,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.calendar_today,
+                                                color: isPast ? Colors.grey : const Color(0xFF1976D2),
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                DateFormat('dd/MM/yyyy').format(booking.date),
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isPast ? Colors.grey : Colors.black87,
+                                                ),
+                                              ),
+                                              if (isPast) ...[
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 2,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey,
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: const Text(
+                                                    'Pasada',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _getPaymentStatusColor(booking.paymentStatus),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              booking.paymentStatus.displayName,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                _buildInfoRow(Icons.people, '${booking.numberOfFishermen} pescadores'),
+                                _buildInfoRow(Icons.location_on, booking.location),
+                                _buildInfoRow(Icons.set_meal, booking.targetSpecies.join(', ')),
+                                _buildInfoRow(
+                                  Icons.attach_money,
+                                  '\$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}',
+                                  color: Colors.green,
+                                ),
+                                if (booking.notes.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(Icons.note, booking.notes),
+                                ],
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () => _compartirBooking(booking),
+                                      icon: const Icon(Icons.share, color: Color(0xFF1976D2)),
+                                      tooltip: 'Compartir',
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Eliminar Contratación'),
+                                            content: const Text(
+                                              '¿Estás seguro de que deseas eliminar esta contratación?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: const Text('Cancelar'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                  _eliminarBooking(index);
+                                                },
+                                                child: const Text(
+                                                  'Eliminar',
+                                                  style: TextStyle(color: Colors.red),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      tooltip: 'Eliminar',
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color ?? Colors.grey[600]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 14,
+                color: color ?? Colors.black87,
+                fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class PantallaAgendaDetalle extends StatefulWidget {
   const PantallaAgendaDetalle({super.key});
 
@@ -1811,7 +2137,6 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
   // Lista de contrataciones guardadas
   List<Booking> bookings = [];
   bool isLoading = true;
-  bool mostrarTodas = false; // Toggle para mostrar todas o solo la próxima
 
   @override
   void initState() {
@@ -2101,30 +2426,54 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                mostrarTodas ? 'Todas las Contrataciones' : 'Próxima Contratación',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1976D2),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PantallaListaContrataciones(),
+                                    ),
+                                  ).then((_) {
+                                    _cargarBookings();
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1976D2).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFF1976D2),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.calendar_view_day,
+                                        color: Color(0xFF1976D2),
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Próxima Contratación',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1976D2),
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        color: Color(0xFF1976D2),
+                                        size: 16,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              if (bookings.length > 1)
-                                TextButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      mostrarTodas = !mostrarTodas;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    mostrarTodas ? Icons.visibility_off : Icons.list,
-                                    size: 18,
-                                  ),
-                                  label: Text(mostrarTodas ? 'Ver Próxima' : 'Ver Todas'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF1976D2),
-                                  ),
-                                ),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -2184,16 +2533,14 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
                           else
                             Expanded(
                               child: () {
-                                // Filtrar contrataciones a mostrar
+                                // Mostrar solo la próxima contratación
                                 final now = DateTime.now();
                                 final futureBookings = bookings.where((b) {
                                   return b.date.isAfter(now.subtract(const Duration(days: 1)));
                                 }).toList()
                                   ..sort((a, b) => a.date.compareTo(b.date));
                                 
-                                final bookingsToShow = mostrarTodas 
-                                    ? bookings 
-                                    : (futureBookings.isNotEmpty ? [futureBookings.first] : []);
+                                final bookingsToShow = futureBookings.isNotEmpty ? [futureBookings.first] : [];
                                 
                                 return ListView.builder(
                                   itemCount: bookingsToShow.length,
