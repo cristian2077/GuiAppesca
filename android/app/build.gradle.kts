@@ -37,15 +37,6 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    
-    // Configurar nombre de la APK
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            val versionName = flutter.versionName ?: "1.0.0"
-            val versionCode = flutter.versionCode ?: 1
-            outputFileName = "GuiAppesca-v${versionName}-${versionCode}.apk"
-        }
-    }
 }
 
 flutter {
