@@ -3936,12 +3936,25 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
     final depositAmountValue = double.tryParse(depositAmount) ?? 0.0;
     final remainingBalance = totalPriceValue - depositAmountValue;
 
+    // Calcular el estado de pago sin modificar directamente
+    PaymentStatus calculatedStatus;
     if (depositAmountValue >= totalPriceValue && totalPriceValue > 0) {
-      paymentStatus = PaymentStatus.completed;
+      calculatedStatus = PaymentStatus.completed;
     } else if (depositAmountValue > 0) {
-      paymentStatus = PaymentStatus.partial;
+      calculatedStatus = PaymentStatus.partial;
     } else {
-      paymentStatus = PaymentStatus.pending;
+      calculatedStatus = PaymentStatus.pending;
+    }
+
+    // Actualizar solo si cambió
+    if (paymentStatus != calculatedStatus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            paymentStatus = calculatedStatus;
+          });
+        }
+      });
     }
 
     return Card(
@@ -3972,15 +3985,15 @@ class _PantallaEditarContratacionState extends State<PantallaEditarContratacion>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: paymentStatus == PaymentStatus.completed
+                color: calculatedStatus == PaymentStatus.completed
                     ? Colors.green
-                    : paymentStatus == PaymentStatus.partial
+                    : calculatedStatus == PaymentStatus.partial
                         ? Colors.blue
                         : Colors.orange,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                paymentStatus.displayName,
+                calculatedStatus.displayName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
