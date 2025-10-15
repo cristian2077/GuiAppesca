@@ -2096,6 +2096,36 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
     );
   }
 
+  void _editarBooking(Booking booking, int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PantallaEditarContratacion(
+          booking: booking,
+          onUpdateBooking: (updatedBooking) async {
+            setState(() {
+              bookings[index] = updatedBooking;
+            });
+            
+            // Guardar en SharedPreferences
+            final prefs = await SharedPreferences.getInstance();
+            final bookingsJson = bookings.map((b) => jsonEncode(b.toJson())).toList();
+            await prefs.setStringList('saved_bookings', bookingsJson);
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Contratación actualizada'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   void _mostrarDetallesBooking(Booking booking, int index) {
     showDialog(
       context: context,
@@ -2252,59 +2282,83 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
                     bottomRight: Radius.circular(16),
                   ),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _compartirBooking(booking),
-                        icon: const Icon(Icons.share, size: 18),
-                        label: const Text('Compartir'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Eliminar Contratación'),
-                              content: const Text(
-                                '¿Estás seguro de que deseas eliminar esta contratación?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Cancelar'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    _eliminarBooking(index);
-                                  },
-                                  child: const Text(
-                                    'Eliminar',
-                                    style: TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _editarBooking(booking, index);
+                            },
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('Editar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2196F3),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.delete, size: 18),
-                        label: const Text('Eliminar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF44336),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _compartirBooking(booking),
+                            icon: const Icon(Icons.share, size: 18),
+                            label: const Text('Compartir'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Eliminar Contratación'),
+                                  content: const Text(
+                                    '¿Estás seguro de que deseas eliminar esta contratación?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _eliminarBooking(index);
+                                      },
+                                      child: const Text(
+                                        'Eliminar',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.delete, size: 18),
+                            label: const Text('Eliminar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF44336),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
