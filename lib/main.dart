@@ -304,7 +304,21 @@ class PantallaPrincipal extends StatelessWidget {
   }
 
   Widget _buildAgendaGuia(BuildContext context) {
-    return GestureDetector(
+    return FutureBuilder<List<Booking>>(
+      future: BookingStorage.loadBookings(),
+      builder: (context, snapshot) {
+        final bookings = snapshot.data ?? [];
+        final now = DateTime.now();
+        
+        // Filtrar contrataciones futuras y ordenar por fecha
+        final futureBookings = bookings.where((b) {
+          return b.date.isAfter(now.subtract(const Duration(days: 1)));
+        }).toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
+        
+        final nextBooking = futureBookings.isNotEmpty ? futureBookings.first : null;
+        
+        return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
@@ -389,7 +403,7 @@ class PantallaPrincipal extends StatelessWidget {
                       
                       // Título
                       const Text(
-                        'Agenda del Guía',
+                        'Próxima Contratación',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -405,42 +419,65 @@ class PantallaPrincipal extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       
-                      // Fecha actual
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 2,
-                              offset: const Offset(0, 1),
+                      // Próxima contratación o mensaje
+                      if (nextBooking != null) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          'Hoy - ${DateFormat('d \'de\' MMMM', 'es').format(DateTime.now())}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 8,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0, 0.5),
-                                blurRadius: 1,
-                                color: Colors.black26,
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                nextBooking.clientName,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(nextBooking.date),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
+                      ] else ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Text(
+                            'Sin contrataciones',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -448,6 +485,8 @@ class PantallaPrincipal extends StatelessWidget {
             ),
           ),
         );
+      },
+    );
   }
 
   Widget _buildClimaWidget(BuildContext context) {
