@@ -1859,20 +1859,21 @@ class _PantallaListaContratacionesState extends State<PantallaListaContratacione
   }
 
   void _compartirBooking(Booking booking) {
+    final saldo = booking.totalPrice - booking.depositAmount;
+    final notasTexto = (booking.notes != null && booking.notes!.isNotEmpty) 
+        ? '\n📝 ${booking.notes}' 
+        : '';
+    
     final text = '''
-🎣 CONTRATACIÓN DE PESCA
+🎣 COMPROBANTE DE PESCA
 
-📅 Fecha: ${DateFormat('dd/MM/yyyy').format(booking.date)}
-👤 Cliente: ${booking.clientName}
-📞 Teléfono: ${booking.clientPhone}
-📍 Lugar: ${booking.clientLocation}
-👥 Pescadores: ${booking.numberOfFishermen}
-🐟 Especies: ${booking.targetSpecies.join(', ')}
-💰 Precio Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}
-💳 Estado de Pago: ${booking.paymentStatus.displayName}
-📝 Notas: ${booking.notes ?? 'Sin notas'}
+👤 ${booking.clientName} | 📞 ${booking.clientPhone}
+📅 ${DateFormat('dd/MM/yyyy').format(booking.date)} | 👥 ${booking.numberOfFishermen} pescadores
+🐟 ${booking.targetSpecies.join(', ')}
+💰 Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)} | Seña: \$${NumberFormat('#,##0', 'es').format(booking.depositAmount)}
+💳 ${booking.paymentStatus.displayName} | Saldo: \$${NumberFormat('#,##0', 'es').format(saldo)}$notasTexto
 
---- GuiAppesca ---
+GuiAppesca 🎣
 ''';
     
     Share.share(text);
@@ -3092,52 +3093,21 @@ class _PantallaAgendaDetalleState extends State<PantallaAgendaDetalle> {
 
   // Compartir contratación por WhatsApp, Email, etc.
   Future<void> _shareBooking(Booking booking) async {
-    // Calcular fecha de finalización
-    final fechaInicio = DateFormat('dd/MM/yyyy').format(booking.date);
-    final fechaFin = DateFormat('dd/MM/yyyy').format(
-      booking.date.add(Duration(days: booking.fishingDays - 1))
-    );
+    final saldo = booking.totalPrice - booking.depositAmount;
+    final notasTexto = (booking.notes != null && booking.notes!.isNotEmpty) 
+        ? '\n📝 ${booking.notes}' 
+        : '';
     
     final String shareText = '''
-🎣 CONTRATACIÓN DE PESCA - GuiAppesca
+🎣 COMPROBANTE DE PESCA
 
-━━━━━━━━━━━━━━━━━━━━━━
-📋 DATOS DEL CLIENTE
-━━━━━━━━━━━━━━━━━━━━━━
-👤 Nombre: ${booking.clientName}
-📞 Teléfono: ${booking.clientPhone}
-📍 Ubicación: ${booking.clientLocation}
+👤 ${booking.clientName} | 📞 ${booking.clientPhone}
+📅 ${DateFormat('dd/MM/yyyy').format(booking.date)} | 👥 ${booking.numberOfFishermen} pescadores
+🐟 ${booking.targetSpecies.join(', ')}
+💰 Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)} | Seña: \$${NumberFormat('#,##0', 'es').format(booking.depositAmount)}
+💳 ${booking.paymentStatus.displayName} | Saldo: \$${NumberFormat('#,##0', 'es').format(saldo)}$notasTexto
 
-━━━━━━━━━━━━━━━━━━━━━━
-📅 DETALLES DE LA PESCA
-━━━━━━━━━━━━━━━━━━━━━━
-📆 Fecha Inicio: $fechaInicio
-📆 Fecha Fin: $fechaFin
-🗓️ Días de Pesca: ${booking.fishingDays} ${booking.fishingDays == 1 ? 'día' : 'días'}
-👥 Cantidad de Pescadores: ${booking.numberOfFishermen}
-🐟 Especies Objetivo: ${booking.targetSpecies.join(', ')}
-🎣 Modalidad: ${booking.fishingMode.displayName}
-
-━━━━━━━━━━━━━━━━━━━━━━
-📦 SERVICIOS INCLUIDOS
-━━━━━━━━━━━━━━━━━━━━━━
-${booking.additionalBoats.isNotEmpty ? '⛵ Embarcaciones Adicionales: ${booking.additionalBoats.join(', ')}\n' : ''}${booking.includesBait ? '🪱 Carnada: Incluida\n' : ''}${booking.equipmentRental ? '🎣 Alquiler de Equipo: Incluido\n' : ''}${booking.includesAccommodation ? '🏠 Alojamiento: ${booking.accommodationNights} ${booking.accommodationNights == 1 ? 'noche' : 'noches'}\n' : ''}${booking.includesMeals ? '🍽️ Comidas: Incluidas\n' : ''}
-━━━━━━━━━━━━━━━━━━━━━━
-💰 INFORMACIÓN DE PAGO
-━━━━━━━━━━━━━━━━━━━━━━
-💵 Precio Total: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice)}
-💳 Seña Abonada: \$${NumberFormat('#,##0', 'es').format(booking.depositAmount)}
-💰 Saldo Restante: \$${NumberFormat('#,##0', 'es').format(booking.totalPrice - booking.depositAmount)}
-✅ Estado del Pago: ${booking.paymentStatus.displayName}
-${booking.notes != null && booking.notes!.isNotEmpty ? '\n━━━━━━━━━━━━━━━━━━━━━━\n📝 NOTAS ADICIONALES\n━━━━━━━━━━━━━━━━━━━━━━\n${booking.notes}\n' : ''}
-━━━━━━━━━━━━━━━━━━━━━━
-
-📱 Generado por GuiAppesca
-🎣 Tu guía de pesca digital
-
-━━━━━━━━━━━━━━━━━━━━━━
-✍️ Comprobante de acuerdos con el guía de pesca
-━━━━━━━━━━━━━━━━━━━━━━
+GuiAppesca 🎣
 ''';
 
     try {
