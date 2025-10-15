@@ -4135,28 +4135,34 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
   }
 
   Widget _buildGuiaCard(GuiaPesca guia, int index) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          // Ver pantalla individual del guía al tocar cualquier parte
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PantallaDetalleGuia(
-                guia: guia,
-                guiaIndex: index,
-                onGuiaUpdated: () => _cargarGuias(),
-              ),
-            ),
-          );
-        },
-        child: ListTile(
+    return FutureBuilder<String>(
+      future: GuiasStorage.getDeviceId(),
+      builder: (context, snapshot) {
+        final currentDeviceId = snapshot.data ?? '';
+        final isCreator = currentDeviceId == guia.creadorId;
+        
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
+              // Ver pantalla individual del guía al tocar cualquier parte
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PantallaDetalleGuia(
+                    guia: guia,
+                    guiaIndex: index,
+                    onGuiaUpdated: () => _cargarGuias(),
+                  ),
+                ),
+              );
+            },
+            child: ListTile(
           contentPadding: const EdgeInsets.all(12),
           leading: CircleAvatar(
           radius: 30,
@@ -4196,7 +4202,7 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
           guia.telefono,
           style: const TextStyle(fontSize: 14),
         ),
-        trailing: Row(
+        trailing: isCreator ? Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
@@ -4288,9 +4294,11 @@ class _PantallaServiciosGuiaState extends State<PantallaServiciosGuia> {
               },
             ),
           ],
-        ),
+        ) : null, // Si no es creador, no mostrar botones
         ),
       ),
+        );
+      },
     );
   }
 }
@@ -4307,6 +4315,7 @@ class GuiaPesca {
   final String? tiktok;
   final List<String> fotos; // Lista de rutas de fotos
   final String? descripcion;
+  final String creadorId; // ID del dispositivo que creó el guía
 
   GuiaPesca({
     required this.nombre,
@@ -4319,6 +4328,7 @@ class GuiaPesca {
     this.tiktok,
     List<String>? fotos,
     this.descripcion,
+    required this.creadorId,
   }) : fotos = fotos ?? [];
 
   // Convertir GuiaPesca a Map para JSON
@@ -4334,6 +4344,7 @@ class GuiaPesca {
       'tiktok': tiktok,
       'fotos': fotos,
       'descripcion': descripcion,
+      'creadorId': creadorId,
     };
   }
 
@@ -4350,6 +4361,7 @@ class GuiaPesca {
       tiktok: json['tiktok'],
       fotos: json['fotos'] != null ? List<String>.from(json['fotos']) : [],
       descripcion: json['descripcion'],
+      creadorId: json['creadorId'] ?? '',
     );
   }
 }
@@ -4357,6 +4369,21 @@ class GuiaPesca {
 // Servicio para manejar la persistencia de guías
 class GuiasStorage {
   static const String _guiasKey = 'saved_guias';
+  static const String _deviceIdKey = 'device_id';
+
+  // Obtener o crear ID único del dispositivo
+  static Future<String> getDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? deviceId = prefs.getString(_deviceIdKey);
+    
+    if (deviceId == null) {
+      // Generar ID único basado en timestamp y random
+      deviceId = 'device_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
+      await prefs.setString(_deviceIdKey, deviceId);
+    }
+    
+    return deviceId;
+  }
 
   // Guardar lista de guías
   static Future<void> saveGuias(List<GuiaPesca> guias) async {
@@ -4498,8 +4525,10 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
     }
   }
 
-  void _guardarGuia() {
+  Future<void> _guardarGuia() async {
     if (_formKey.currentState!.validate()) {
+      final deviceId = await GuiasStorage.getDeviceId();
+      
       final guia = GuiaPesca(
         nombre: _nombreController.text,
         telefono: _telefonoController.text,
@@ -4510,6 +4539,7 @@ class _PantallaAgregarGuiaState extends State<PantallaAgregarGuia> {
         whatsapp: _whatsappController.text.isEmpty ? null : _whatsappController.text,
         tiktok: _tiktokController.text.isEmpty ? null : _tiktokController.text,
         descripcion: _descripcionController.text.isEmpty ? null : _descripcionController.text,
+        creadorId: deviceId,
       );
 
       widget.onGuardado(guia);
@@ -4885,8 +4915,10 @@ class _PantallaEditarGuiaState extends State<PantallaEditarGuia> {
         facebook: _facebookController.text.isEmpty ? null : _facebookController.text,
         instagram: _instagramController.text.isEmpty ? null : _instagramController.text,
         whatsapp: _whatsappController.text.isEmpty ? null : _whatsappController.text,
+        tiktok: _tiktokController.text.isEmpty ? null : _tiktokController.text,
         descripcion: _descripcionController.text.isEmpty ? null : _descripcionController.text,
         fotos: widget.guia.fotos, // Mantener las fotos existentes
+        creadorId: widget.guia.creadorId, // Mantener el creador original
       );
 
       widget.onGuardado(guia);
@@ -5132,6 +5164,7 @@ class _PantallaDetalleGuiaState extends State<PantallaDetalleGuia> {
           tiktok: widget.guia.tiktok,
           descripcion: widget.guia.descripcion,
           fotos: fotos,
+          creadorId: widget.guia.creadorId,
         );
         
         await GuiasStorage.updateGuia(widget.guiaIndex, guiaActualizado);
