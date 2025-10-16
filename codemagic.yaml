@@ -1,13 +1,25 @@
 workflows:
-  # Flujo de trabajo para iOS (SIN FIRMAR - Sin contraseñas)
+  # Flujo de trabajo para iOS con TestFlight
   ios-workflow:
-    name: iOS Workflow (Unsigned)
+    name: iOS Workflow (TestFlight)
     max_build_duration: 120
     instance_type: mac_mini_m1
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      vars:
+        BUNDLE_ID: "com.guiappesca.app"
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.guiappesca.app
+      app_store_connect:
+        # Esto usará la integración de App Store Connect que configuraste en Team settings
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
     scripts:
       - name: Get Flutter packages
         script: |
@@ -15,24 +27,26 @@ workflows:
       - name: Install pods
         script: |
           find . -name "Podfile" -execdir pod install \;
-      - name: Flutter build iOS sin firmar
+      - name: Set up code signing
         script: |
-          flutter build ios --release --no-codesign
-      - name: Crear IPA sin firmar
+          xcode-project use-profiles
+      - name: Flutter build iOS IPA
         script: |
-          mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r GuiAppesca-unsigned.ipa Payload
-          rm -rf Payload
-          mkdir -p build/ios/ipa
-          mv GuiAppesca-unsigned.ipa build/ios/ipa/
+          flutter build ipa --release \
+            --export-options-plist=$HOME/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - flutter_drive.log
     publishing:
+      app_store_connect:
+        # Subir automáticamente a TestFlight
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
       email:
         recipients:
-          - tu_email@ejemplo.com
+          - carolina@email.com
         notify:
           success: true
           failure: true
